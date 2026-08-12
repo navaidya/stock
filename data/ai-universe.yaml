@@ -1,0 +1,118 @@
+# AI-exposed universe for the AI page.
+#
+# This is a CURATED CLASSIFICATION, not a recommendation list. Each entry is
+# here because a material share of its business is tied to AI infrastructure
+# buildout — not because it is judged a good investment. The dashboard must
+# never render this as a buy list.
+#
+# Curated 2026-08-12. Company AI exposure shifts fast; revisit periodically.
+# Segments intentionally follow the physical AI supply chain, where the user's
+# stated interest lies: chips, memory, storage, networking, power, cooling.
+
+segments:
+  compute: Compute, GPUs, and custom accelerators
+  foundry_semicap: Foundry and semiconductor manufacturing equipment
+  memory: Memory and high-bandwidth memory (HBM)
+  storage: Storage
+  networking_optics: Networking, interconnect, and optics
+  power: Power generation and electrical distribution
+  cooling_systems: Cooling, thermal management, and AI server systems
+
+universe:
+  # --- Compute, GPUs, custom accelerators ---
+  - ticker: NVDA
+    name: NVIDIA
+    segment: compute
+    why: GPU and accelerator supplier for AI training and inference
+  - ticker: AMD
+    name: Advanced Micro Devices
+    segment: compute
+    why: Data-center GPU and CPU alternative to NVIDIA
+  - ticker: AVGO
+    name: Broadcom
+    segment: compute
+    why: Custom AI ASICs for hyperscalers, plus data-center networking silicon
+  - ticker: MRVL
+    name: Marvell Technology
+    segment: compute
+    why: Custom silicon and data-center interconnect
+
+  # --- Foundry and semicap ---
+  - ticker: TSM
+    name: Taiwan Semiconductor (ADR)
+    segment: foundry_semicap
+    why: Fabricates most leading-edge AI accelerators; advanced packaging
+  - ticker: ASML
+    name: ASML Holding (ADR)
+    segment: foundry_semicap
+    why: Sole supplier of EUV lithography for leading-edge nodes
+  - ticker: AMAT
+    name: Applied Materials
+    segment: foundry_semicap
+    why: Deposition and etch equipment for logic and memory capacity
+  - ticker: LRCX
+    name: Lam Research
+    segment: foundry_semicap
+    why: Etch and deposition, heavily levered to memory and HBM capacity
+
+  # --- Memory ---
+  - ticker: MU
+    name: Micron Technology
+    segment: memory
+    why: HBM and NAND; memory bandwidth is a primary AI cluster bottleneck
+
+  # --- Storage ---
+  - ticker: WDC
+    name: Western Digital
+    segment: storage
+    why: Capacity storage for AI training datasets
+  - ticker: STX
+    name: Seagate Technology
+    segment: storage
+    why: High-capacity drives for data-center storage tiers
+
+  # --- Networking, interconnect, optics ---
+  - ticker: ANET
+    name: Arista Networks
+    segment: networking_optics
+    why: High-speed switching fabric connecting GPU clusters
+  - ticker: ALAB
+    name: Astera Labs
+    segment: networking_optics
+    why: Connectivity silicon for AI rack-scale interconnect
+  - ticker: COHR
+    name: Coherent
+    segment: networking_optics
+    why: Optical components and transceivers for data-center links
+  - ticker: FN
+    name: Fabrinet
+    segment: networking_optics
+    why: Assembles and tests 800G+ optical transceivers
+
+  # --- Power ---
+  - ticker: VRT
+    name: Vertiv Holdings
+    segment: power
+    why: Power distribution and liquid cooling for high-density AI racks
+  - ticker: ETN
+    name: Eaton
+    segment: power
+    why: Electrical distribution equipment for data-center buildout
+  - ticker: GEV
+    name: GE Vernova
+    segment: power
+    why: Grid equipment and generation serving data-center demand
+  - ticker: CEG
+    name: Constellation Energy
+    segment: power
+    why: Nuclear generation contracted to data-center operators
+
+  # --- Cooling and AI server systems ---
+  - ticker: SMCI
+    name: Super Micro Computer
+    segment: cooling_systems
+    why: AI server systems including direct liquid-cooled rack designs
+
+# Demand drivers, tracked as context rather than as AI-exposure holdings. Their
+# AI revenue is diluted by large non-AI businesses, so their capex guidance is
+# the useful signal, not their multiples: MSFT, GOOGL, AMZN, META, ORCL.

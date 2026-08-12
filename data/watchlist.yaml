@@ -1,0 +1,59 @@
+# Home page watchlist.
+#
+# PUBLIC REPO: tickers only. Never add share counts, cost basis, purchase
+# dates, or P&L to this file — see the "This repository is PUBLIC" section in
+# CLAUDE.md. Personal position data belongs in a gitignored local file.
+
+watchlist:
+  - ticker: ORCL
+    name: Oracle
+    sector: technology
+  - ticker: NVDA
+    name: NVIDIA
+    sector: semiconductors
+  - ticker: AVGO
+    name: Broadcom
+    sector: semiconductors
+  - ticker: CRM
+    name: Salesforce
+    sector: software
+  - ticker: CMG
+    name: Chipotle Mexican Grill
+    sector: consumer
+  - ticker: ARM
+    name: Arm Holdings
+    sector: semiconductors
+  - ticker: UNH
+    name: UnitedHealth Group
+    sector: healthcare
+  - ticker: VZ
+    name: Verizon Communications
+    sector: telecom
+  - ticker: PFE
+    name: Pfizer
+    sector: healthcare
+  - ticker: PLTR
+    name: Palantir Technologies
+    sector: software
+  - ticker: META
+    name: Meta Platforms
+    sector: technology
+  - ticker: CRWV
+    name: CoreWeave
+    sector: technology
+    # UNCONFIRMED: transcribed as "CoreView". Assumed CoreWeave (CRWV), the AI
+    # cloud provider. CoreView is a different, privately held SaaS company.
+  - ticker: ANET
+    name: Arista Networks
+    sector: networking
+    # Transcription contained both "avista network" and "Ariesta Network".
+    # Treated as one entry. If "Avista Corp" (AVA, the utility) was meant as a
+    # separate holding, add it explicitly.
+  - ticker: NFLX
+    name: Netflix
+    sector: communication services
+  - ticker: VOO
+    name: Vanguard S&P 500 ETF
+    sector: etf
+    # ETF: most single-stock fundamentals (P/E, margins, ROE) do not apply.
+    # Render as expense ratio, yield, AUM, and price return instead.
