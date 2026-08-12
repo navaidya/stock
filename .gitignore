@@ -10,6 +10,15 @@ dist/
 !.env.example
 .mcp.json
 
+# This repo is PUBLIC. Personal portfolio data must never be committed:
+# holdings, position sizes, cost basis, balances, or a personal watchlist.
+portfolio.*
+holdings.*
+positions.*
+watchlist.local.*
+data/portfolio/
+data/private/
+
 # Per-machine Claude Code overrides. Shared config lives in .claude/settings.json
 # so cloud sessions inherit it; this file must not travel.
 .claude/settings.local.json

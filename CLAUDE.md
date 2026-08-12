@@ -37,6 +37,24 @@ deployed dashboard, which has no MCP client.
 Never commit MCP credentials. If a `.mcp.json` is added, it must reference
 environment variables rather than inline secrets.
 
+## This repository is PUBLIC
+
+`navaidya/stock` is a public repository, so everything committed is
+world-readable and effectively permanent once indexed. Never commit personal
+financial information:
+
+- No holdings, position sizes, share counts, cost basis, account balances, or
+  realized/unrealized P&L — not in source, not in `data/`, not in fixtures, not
+  in test files, and not in commit messages.
+- A **watchlist is personal information too**: the set of tickers someone
+  follows is revealing. Keep any personal watchlist in gitignored local config
+  and commit only a small generic ticker list for tests and demos.
+- Collected market data in `data/` must contain only public market data —
+  prices, volumes, fundamentals, news — never anything derived from a personal
+  portfolio.
+- If a feature needs portfolio data, load it at runtime from a gitignored file
+  and stop to confirm the approach before writing anything that persists it.
+
 ## Secrets
 
 - No API keys in the repository, ever — not in source, not in `data/`, not in
