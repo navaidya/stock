@@ -6,6 +6,7 @@ Owns how market data gets from Finnhub into `data/market.json`, and what happens
 when that goes wrong.
 
 **Implementation:** [scripts/collect.mjs](../scripts/collect.mjs),
+[scripts/commit-data.sh](../scripts/commit-data.sh),
 [.github/workflows/refresh-data.yml](../.github/workflows/refresh-data.yml)
 
 ---
@@ -69,33 +70,19 @@ be worse than no run.
 - **COL-13** `MUST` `manual` — Output is `data/market.json`: an object with
   `generatedAt` (ISO 8601), `failed` (array of tickers), and `stocks` (map of
   ticker to snapshot).
-- **COL-6** `MUST` `ci` — A successful collection is committed and pushed to
+- **COL-6** `MUST` `test` — A successful collection is committed and pushed to
   `main`, **including the first run, when `data/market.json` is not yet
   tracked by git.** The commit-back is what triggers the deploy; a collection
   that is not committed did not happen.
-- **COL-14** `MUST` `ci` — A run that produces no change to `data/market.json`
+- **COL-14** `MUST` `test` — A run that produces no change to `data/market.json`
   completes successfully without creating an empty commit.
+- **COL-15** `MUST` `test` — The commit contains only `data/market.json`. Any
+  other file the job happened to modify is left uncommitted.
+- **COL-16** `MUST` `test` — If the collector produced no output file, the
+  commit step fails loudly rather than reporting success. A green run that
+  committed nothing is the failure mode this whole area is built to prevent.
 
 ## Known gaps
-
-**`COL-6` is currently violated.** The workflow step is:
-
-```sh
-git diff --quiet -- data/market.json || git commit -am 'chore: refresh market data'
-```
-
-`git diff --quiet` ignores untracked files and exits 0, so on the first run the
-`||` short-circuits and no commit is made. `git commit -am` would not stage an
-untracked file in any case. The result is a green run that discards its own
-output, permanently — because the file never becomes tracked, every subsequent
-run repeats the same failure.
-
-The fix is to stage explicitly and test the index rather than the worktree:
-
-```sh
-git add data/market.json
-git diff --cached --quiet || git commit -m 'chore: refresh market data'
-```
 
 **`COL-2` is currently unmet:** no `FINNHUB_API_KEY` secret is configured on the
 repository, so every scheduled run exits 1. This requires a manual step outside

@@ -30,8 +30,10 @@ jobs:
       - run: npm run collect
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+      # Commit logic lives in a script so it can be tested (COL-6). The inline
+      # version this replaces silently discarded the first collection.
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git diff --quiet -- data/market.json || git commit -am 'chore: refresh market data'
+          ./scripts/commit-data.sh
       - run: git push

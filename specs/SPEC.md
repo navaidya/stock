@@ -117,8 +117,7 @@ empty list is the goal, not the assumption.
 
 | ID | Gap | Impact | Status |
 |---|---|---|---|
-| `COL-6` | The refresh workflow never commits the first `data/market.json`. `git diff --quiet -- data/market.json` exits 0 for an untracked file, so the `\|\|` short-circuits and the commit is skipped; `git commit -am` would not stage an untracked file regardless. | The collector writes the file, the job reports success, and the file is discarded with the runner. The dashboard shows "never collected" indefinitely while every run is green. | **Open** |
-| `COL-2` | No `FINNHUB_API_KEY` secret is configured on the repository. | The collector exits 1 on every scheduled run. No data has ever been collected. | **Open** — needs a manual step outside the repo |
+| `COL-2` | No `FINNHUB_API_KEY` secret is configured on the repository. | The collector exits 1 on every scheduled run. No data has ever been collected, so every column on the published dashboard is blank. | **Open** — needs a manual step outside the repo, and is the only remaining blocker to data appearing |
 | `SEC-4` | `data/watchlist.yaml` is committed and labelled "Home page watchlist" with 15 specific tickers, and the home page describes it as "Tracked positions and watchlist". | A personal watchlist is personal information in a public repo. Already in git history, so removal requires a history rewrite. | **Open** — needs a decision |
 | `COL-3`, `COL-4`, `COL-5` | The collector's pacing and failure-retention logic is not covered by any test. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect |
 
