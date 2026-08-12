@@ -8,7 +8,9 @@ empty states.
 **Implementation:** [src/pages/](../src/pages/),
 [src/components/StockTable.astro](../src/components/StockTable.astro),
 [src/layouts/Base.astro](../src/layouts/Base.astro),
-[src/lib/columns.ts](../src/lib/columns.ts)
+[src/lib/columns.ts](../src/lib/columns.ts),
+[src/lib/sort.ts](../src/lib/sort.ts),
+[src/lib/glossary.ts](../src/lib/glossary.ts)
 
 ---
 
@@ -25,12 +27,22 @@ reinvesting everything into growth; payout ratio is meaningless for a company
 that pays no dividend. Showing every metric on every page would bury the few
 that matter for the question that page answers.
 
+Two consequences of the column set being wide follow from that same fact.
+**Sorting** is how a twenty-column table becomes answerable — "which of these is
+furthest off its high" is a question about one column, and it is a fair question
+because it names its metric (`UI-9`). Sorting is client-side and additive: the
+prerendered order is meaningful on its own, so the page is complete before any
+script runs. **A glossary** is the other consequence: a label short enough to fit
+a column header is rarely self-explanatory, and `title` text does not exist on a
+phone, so every label links to a page that says what the number is and how it
+misleads.
+
 ## Requirements
 
 ### Pages
 
-- **UI-1** `MUST` `build` — Three static pages: `/` (watchlist), `/ai` (AI
-  exposure), `/dividends`. All are prerendered; none fetches at runtime.
+- **UI-1** `MUST` `build` — Four static pages: `/` (watchlist), `/ai` (AI
+  exposure), `/dividends`, `/faq`. All are prerendered; none fetches at runtime.
 - **UI-2** `MUST` `build` — Every page builds and renders with no
   `data/market.json` present, showing rows with empty metrics (see `MOD-15`).
 - **UI-8** `MUST` `build` — Every page displays the data's age, derived from
@@ -48,6 +60,42 @@ that matter for the question that page answers.
   without its neighbours, since primary columns are read alone on a phone.
 - **UI-12** `SHOULD` `manual` — A column whose meaning is not obvious from its
   label carries `help` text, surfaced on hover and in the expanded card.
+
+### Sorting
+
+- **UI-21** `MUST` `test` — Every column on every page can be sorted ascending
+  and descending by its own value.
+- **UI-22** `MUST` `test` — Rows with a missing value sort last in **both**
+  directions. An em dash is not a small number, and must never take the top of
+  a column sorted ascending.
+- **UI-23** `MUST` `test` — Sorting is stable: rows holding equal values keep
+  their existing relative order, so a second sort does not scramble the first.
+- **UI-24** `MUST` `test` — A column sorts on the snapshot field named by its
+  key, or on an explicit `sort` accessor where one is declared — never on the
+  rendered string. `$1.20T` must order above `$900M`, and `AA-` above `BBB`.
+- **UI-25** `MUST` `manual` — Each column header carries an up and a down arrow
+  control. The active one is visually distinct, and the sorted header reports
+  `aria-sort` as `ascending` or `descending`.
+- **UI-26** `MUST` `manual` — The card layout carries an equivalent sort control
+  — a column selector plus the same two arrows — because it has no headers to
+  put arrows on. Sorting a card list reorders it identically to the table.
+- **UI-27** `MUST` `manual` — Sorting is client-side and progressive. With no
+  JavaScript the page renders in its prerendered order, which is meaningful on
+  its own, and no control is left in a broken state.
+
+### Column glossary
+
+- **UI-28** `MUST` `build` — `/faq` documents every column that any page shows,
+  each under a stable `#col-<key>` anchor.
+- **UI-29** `MUST` `test` — Every column key used by any page has a glossary
+  entry, and every glossary entry is used by at least one column. A column with
+  no explanation, and an explanation of a column that no longer exists, are both
+  failures.
+- **UI-30** `MUST` `manual` — Every column label, in the table header and in the
+  expanded card, links to its `/faq` entry.
+- **UI-31** `MUST` `manual` — The FAQ states where the data comes from, how
+  often it refreshes, what an em dash means, that hand-curated reference values
+  carry an as-of date, and that nothing on the site is advice (`SYS-5`).
 
 ### Responsive behaviour
 

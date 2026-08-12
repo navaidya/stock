@@ -8,7 +8,8 @@ derived metrics, and the formatting of values for display.
 **Implementation:** [src/lib/types.ts](../src/lib/types.ts),
 [src/lib/finnhub.ts](../src/lib/finnhub.ts),
 [src/lib/data.ts](../src/lib/data.ts),
-[src/lib/format.ts](../src/lib/format.ts)
+[src/lib/format.ts](../src/lib/format.ts),
+[src/lib/rating.ts](../src/lib/rating.ts)
 
 ---
 
@@ -83,6 +84,33 @@ specification — the arithmetic is the easy part.
   when `data/market.json` is absent or unparseable. The site must build on a
   fresh clone before the collector has ever run, otherwise the first deploy
   fails and nobody can see the dashboard at all.
+
+### Reference data
+
+Not everything worth a column is on the API. Issuer credit ratings live with the
+rating agencies, and remaining performance obligation is a line in a filing, not
+a metric endpoint. Both are hand-curated in `data/reference.yaml` — which makes
+them a different kind of value from a collected one, and the requirements below
+exist to keep that difference visible rather than blurred.
+
+- **MOD-19** `MUST` `test` — `creditRating` is a long-term issuer credit rating
+  held as a string. A value that is not on a recognised scale is dropped, not
+  displayed: an unparseable rating is no rating.
+- **MOD-20** `MUST` `test` — `ratingRank` orders ratings from `AAA` best to `D`
+  worst as a single ordinal, accepts S&P/Fitch and Moody's notation
+  case-insensitively, and returns `undefined` for anything unrecognised. Ratings
+  sort by credit quality, never alphabetically.
+- **MOD-21** `MUST` `test` — `rpo` is remaining performance obligation in
+  millions of USD — the same unit as `marketCap`, so one formatter serves both.
+  A value that is not a finite non-negative number is dropped.
+- **MOD-22** `MUST` `test` — Reference values merge onto a snapshot during
+  hydration and never overwrite a collected field. The collector is the
+  authority for anything it collects.
+- **MOD-23** `MUST` `test` — A ticker with no reference entry hydrates
+  unchanged, with the reference fields absent rather than empty.
+- **MOD-24** `MUST` `manual` — Every reference value carries an `asOf` date and
+  a source, because nothing refreshes it. A hand-curated number with no date is
+  indistinguishable from a stale one.
 
 ### Freshness
 

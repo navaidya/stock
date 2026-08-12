@@ -1,7 +1,14 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import type { MarketData, StockSnapshot, UniverseEntry, WatchlistEntry } from './types.ts';
+import { normalizeReference } from './reference.ts';
+import type {
+  MarketData,
+  ReferenceEntry,
+  StockSnapshot,
+  UniverseEntry,
+  WatchlistEntry,
+} from './types.ts';
 
 const ROOT = process.cwd();
 const DATA = join(ROOT, 'data');
@@ -14,6 +21,19 @@ export function loadWatchlist(): WatchlistEntry[] {
 export function loadUniverse(): { segments: Record<string, string>; universe: UniverseEntry[] } {
   const raw = parse(readFileSync(join(DATA, 'ai-universe.yaml'), 'utf8'));
   return { segments: raw?.segments ?? {}, universe: raw?.universe ?? [] };
+}
+
+/** Hand-curated values the API does not carry — credit ratings, RPO. Optional
+ *  in the same way market.json is: absent or malformed yields an empty map and
+ *  the columns render as em dashes. */
+export function loadReference(): Record<string, ReferenceEntry> {
+  const path = join(DATA, 'reference.yaml');
+  if (!existsSync(path)) return {};
+  try {
+    return normalizeReference(parse(readFileSync(path, 'utf8')));
+  } catch {
+    return {};
+  }
 }
 
 /** Collected market data. Missing entirely on a fresh clone before the
@@ -42,15 +62,20 @@ export function loadMarketData(): MarketData {
 export function hydrate(
   entries: Array<WatchlistEntry | UniverseEntry>,
   market: MarketData,
+  reference: Record<string, ReferenceEntry> = {},
 ): StockSnapshot[] {
   return entries.map((entry) => {
     const collected = market.stocks[entry.ticker];
     const segment = 'segment' in entry ? entry.segment : undefined;
     const sector = 'sector' in entry ? entry.sector : undefined;
+    // Reference values go on first, so anything the collector actually returned
+    // wins over a hand-typed one. The collector is the authority for what it
+    // collects; the reference file only fills what it cannot reach.
+    const ref = reference[entry.ticker] ?? {};
     if (!collected) {
-      return { ticker: entry.ticker, name: entry.name, sector, segment, errors: ['no data'] };
+      return { ticker: entry.ticker, name: entry.name, sector, segment, ...ref, errors: ['no data'] };
     }
-    return { ...collected, name: entry.name, sector: sector ?? collected.sector, segment };
+    return { ...ref, ...collected, name: entry.name, sector: sector ?? collected.sector, segment };
   });
 }
 

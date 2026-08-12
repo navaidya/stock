@@ -2,10 +2,10 @@
 import Base from '../layouts/Base.astro';
 import StockTable from '../components/StockTable.astro';
 import { homeColumns } from '../lib/columns.ts';
-import { hydrate, loadMarketData, loadWatchlist } from '../lib/data.ts';
+import { hydrate, loadMarketData, loadReference, loadWatchlist } from '../lib/data.ts';
 
 const market = loadMarketData();
-const stocks = hydrate(loadWatchlist(), market);
+const stocks = hydrate(loadWatchlist(), market, loadReference());
 ---
 
 <Base

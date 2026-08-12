@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import StockTable from '../components/StockTable.astro';
 import { dividendColumns, payingDividend } from '../lib/columns.ts';
-import { hydrate, loadMarketData, loadUniverse, loadWatchlist } from '../lib/data.ts';
+import { hydrate, loadMarketData, loadReference, loadUniverse, loadWatchlist } from '../lib/data.ts';
 
 const market = loadMarketData();
 
@@ -11,7 +11,7 @@ const all = [...loadWatchlist(), ...loadUniverse().universe];
 const seen = new Set<string>();
 const unique = all.filter((e) => (seen.has(e.ticker) ? false : seen.add(e.ticker)));
 
-const stocks = hydrate(unique, market)
+const stocks = hydrate(unique, market, loadReference())
   .filter(payingDividend)
   .sort((a, b) => (b.dividendYield ?? 0) - (a.dividendYield ?? 0));
 ---

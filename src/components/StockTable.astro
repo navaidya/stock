@@ -1,6 +1,8 @@
 ---
 import type { Column } from '../lib/columns.ts';
+import { sortValueOf } from '../lib/sort.ts';
 import type { StockSnapshot } from '../lib/types.ts';
+import { withBase } from '../lib/url.ts';
 
 interface Props {
   columns: Column[];
@@ -15,74 +17,196 @@ const secondary = columns.filter((c) => !c.primary);
 // on a desktop, and expandable cards for a phone. A 20-column table cannot be
 // made legible at 390px by CSS alone, and this dashboard is mostly read on a
 // phone. Only one is displayed at a time.
+//
+// Sorting reorders both, from one set of values computed here: the browser gets
+// the orderable value of every cell as JSON and never re-derives it from the
+// rendered text, where $1.20T sorts below $900M and AA- below BBB. Rows keep
+// their prerendered order until something is clicked, so the page is complete
+// with no JavaScript at all.
+const sortValues = stocks.map((s) =>
+  Object.fromEntries(columns.map((c) => [c.key, sortValueOf(c, s) ?? null])),
+);
+
+const faqLink = (key: string) => withBase(`/faq#col-${key}`);
 ---
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
+<div class="sortable">
+  <div class="sortbar" hidden>
+    <label>
+      Sort by
+      <select data-sort-select>
+        {columns.map((c) => <option value={c.key}>{c.label}</option>)}
+      </select>
+    </label>
+    <span class="dirs">
+      <button type="button" data-sort-dir="asc" aria-pressed="false" aria-label="Sort ascending">
+        <span aria-hidden="true">▲</span>
+      </button>
+      <button type="button" data-sort-dir="desc" aria-pressed="false" aria-label="Sort descending">
+        <span aria-hidden="true">▼</span>
+      </button>
+    </span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          {
+            columns.map((c) => (
+              <th scope="col" data-key={c.key} class={c.align === 'left' ? 'left' : ''}>
+                <span class="head">
+                  <a href={faqLink(c.key)} title={c.help ?? `What ${c.label} means`}>
+                    {c.label}
+                  </a>
+                  <span class="arrows">
+                    <button
+                      type="button"
+                      data-sort-key={c.key}
+                      data-sort-dir="asc"
+                      aria-pressed="false"
+                      aria-label={`Sort by ${c.label}, ascending`}
+                    >
+                      <span aria-hidden="true">▲</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-sort-key={c.key}
+                      data-sort-dir="desc"
+                      aria-pressed="false"
+                      aria-label={`Sort by ${c.label}, descending`}
+                    >
+                      <span aria-hidden="true">▼</span>
+                    </button>
+                  </span>
+                </span>
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      <tbody>
         {
-          columns.map((c) => (
-            <th scope="col" title={c.help} class={c.align === 'left' ? 'left' : ''}>
-              {c.label}
-            </th>
+          stocks.map((s) => (
+            <tr>
+              {columns.map((c) => (
+                <td class={`${c.align === 'left' ? 'left' : ''} ${c.trend?.(s) ?? ''}`}>
+                  {c.render(s)}
+                </td>
+              ))}
+            </tr>
           ))
         }
-      </tr>
-    </thead>
-    <tbody>
-      {
-        stocks.map((s) => (
-          <tr>
-            {columns.map((c) => (
-              <td class={`${c.align === 'left' ? 'left' : ''} ${c.trend?.(s) ?? ''}`}>
-                {c.render(s)}
-              </td>
-            ))}
-          </tr>
-        ))
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="cards">
+    {
+      stocks.map((s) => (
+        <li>
+          <details>
+            <summary>
+              <span class="sym">
+                <strong>{s.ticker}</strong>
+                <small>{s.name}</small>
+              </span>
+              <span class="quick">
+                {primary
+                  .filter((c) => c.key !== 'ticker')
+                  .map((c) => (
+                    <span class={`chip ${c.trend?.(s) ?? ''}`}>
+                      <em>{c.label}</em>
+                      {c.render(s)}
+                    </span>
+                  ))}
+              </span>
+            </summary>
+            <dl>
+              {secondary.map((c) => (
+                <div>
+                  <dt>
+                    <a href={faqLink(c.key)} title={c.help ?? `What ${c.label} means`}>
+                      {c.label}
+                    </a>
+                  </dt>
+                  <dd class={c.trend?.(s) ?? ''}>{c.render(s)}</dd>
+                </div>
+              ))}
+            </dl>
+            {s.errors?.length ? <p class="err">{s.errors.join('; ')}</p> : null}
+          </details>
+        </li>
+      ))
+    }
+  </ul>
+
+  {stocks.length === 0 && <p class="empty">Nothing to show yet.</p>}
+
+  <!-- Data, not code: inline verbatim rather than going through the bundler. -->
+  <script is:inline type="application/json" data-sort-values set:html={JSON.stringify(sortValues)}
+  />
 </div>
 
-<ul class="cards">
-  {
-    stocks.map((s) => (
-      <li>
-        <details>
-          <summary>
-            <span class="sym">
-              <strong>{s.ticker}</strong>
-              <small>{s.name}</small>
-            </span>
-            <span class="quick">
-              {primary
-                .filter((c) => c.key !== 'ticker')
-                .map((c) => (
-                  <span class={`chip ${c.trend?.(s) ?? ''}`}>
-                    <em>{c.label}</em>
-                    {c.render(s)}
-                  </span>
-                ))}
-            </span>
-          </summary>
-          <dl>
-            {secondary.map((c) => (
-              <div>
-                <dt title={c.help}>{c.label}</dt>
-                <dd class={c.trend?.(s) ?? ''}>{c.render(s)}</dd>
-              </div>
-            ))}
-          </dl>
-          {s.errors?.length ? <p class="err">{s.errors.join('; ')}</p> : null}
-        </details>
-      </li>
-    ))
-  }
-</ul>
+<script>
+  import { sortOrder, type SortDirection, type SortValue } from '../lib/sort.ts';
 
-{stocks.length === 0 && <p class="empty">Nothing to show yet.</p>}
+  // Progressive: the rows are already in a meaningful order when this runs, and
+  // every control below is inert-but-harmless if it never does.
+  for (const root of document.querySelectorAll<HTMLElement>('.sortable')) {
+    const payload = root.querySelector('[data-sort-values]')?.textContent;
+    const tbody = root.querySelector('tbody');
+    const cards = root.querySelector<HTMLElement>('.cards');
+    if (!payload || !tbody || !cards) continue;
+
+    const values: Record<string, SortValue>[] = JSON.parse(payload);
+    const rows = [...tbody.querySelectorAll('tr')];
+    const items = [...cards.children] as HTMLElement[];
+    if (rows.length < 2) continue;
+
+    const select = root.querySelector<HTMLSelectElement>('[data-sort-select]');
+    root.querySelector<HTMLElement>('.sortbar')!.hidden = false;
+
+    let active: { key: string; direction: SortDirection } | null = null;
+
+    function apply(key: string, direction: SortDirection) {
+      const order = sortOrder(
+        values.map((row) => row[key]),
+        direction,
+      );
+      // Appending a node that is already in the DOM moves it, so walking the
+      // order once puts both lists in the same sequence.
+      for (const index of order) {
+        tbody!.appendChild(rows[index]);
+        cards!.appendChild(items[index]);
+      }
+      active = { key, direction };
+
+      for (const th of root.querySelectorAll<HTMLElement>('th[data-key]')) {
+        const sorted = th.dataset.key === key;
+        th.setAttribute('aria-sort', sorted ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
+      }
+      for (const button of root.querySelectorAll<HTMLButtonElement>('button[data-sort-key]')) {
+        const on = button.dataset.sortKey === key && button.dataset.sortDir === direction;
+        button.setAttribute('aria-pressed', String(on));
+      }
+      for (const button of root.querySelectorAll<HTMLButtonElement>('.sortbar button[data-sort-dir]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.sortDir === direction));
+      }
+      if (select) select.value = key;
+    }
+
+    root.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-sort-dir]');
+      if (!button || !root.contains(button)) return;
+      const direction = button.dataset.sortDir as SortDirection;
+      const key = button.dataset.sortKey ?? select?.value ?? active?.key;
+      if (key) apply(key, direction);
+    });
+
+    select?.addEventListener('change', () => apply(select.value, active?.direction ?? 'desc'));
+  }
+</script>
 
 <style>
   .table-wrap {
@@ -104,6 +228,54 @@ const secondary = columns.filter((c) => !c.primary);
   }
   tbody tr:nth-child(even) { background: var(--card); }
   tbody td:first-child { font-weight: 600; }
+
+  .head { display: inline-flex; align-items: center; gap: 0.3rem; }
+  th.left .head { flex-direction: row; }
+  .head a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--line); }
+  .head a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Two arrows rather than one cycling control: the direction you want is the
+     one you press, and which is active stays visible without a legend. */
+  .arrows { display: inline-flex; flex-direction: column; line-height: 0.6; }
+  .arrows button, .sortbar button {
+    background: none;
+    border: 0;
+    padding: 0 0.1rem;
+    margin: 0;
+    font-size: 0.55rem;
+    line-height: 1;
+    color: var(--muted);
+    opacity: 0.45;
+    cursor: pointer;
+  }
+  .arrows button:hover, .sortbar button:hover { opacity: 1; }
+  .arrows button[aria-pressed='true'], .sortbar button[aria-pressed='true'] {
+    opacity: 1;
+    color: var(--accent);
+  }
+  th[aria-sort='ascending'], th[aria-sort='descending'] { color: var(--fg); }
+
+  /* Shown only on the card layout, and only once the script that drives it has
+     run — an inert select is worse than no select. */
+  .sortbar {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .sortbar select {
+    font: inherit;
+    color: var(--fg);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.25rem 0.4rem;
+    margin-left: 0.3rem;
+  }
+  .sortbar .dirs { display: inline-flex; gap: 0.15rem; }
+  .sortbar button { font-size: 0.9rem; padding: 0.25rem 0.4rem; border: 1px solid var(--line); border-radius: 6px; }
 
   .cards { display: none; list-style: none; margin: 0; padding: 0; }
   .cards li { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.5rem; }
@@ -128,6 +300,8 @@ const secondary = columns.filter((c) => !c.primary);
   dl { margin: 0; padding: 0 0.7rem 0.7rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 1rem; }
   dl > div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); }
   dt { color: var(--muted); font-size: 0.82rem; }
+  dt a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--line); }
+  dt a:hover { color: var(--accent); }
   dd { margin: 0; font-variant-numeric: tabular-nums; font-size: 0.85rem; }
   .err { margin: 0 0.7rem 0.7rem; color: var(--down); font-size: 0.8rem; }
   .empty { color: var(--muted); }
@@ -135,5 +309,6 @@ const secondary = columns.filter((c) => !c.primary);
   @media (max-width: 767px) {
     .table-wrap { display: none; }
     .cards { display: block; }
+    .sortbar:not([hidden]) { display: flex; }
   }
 </style>

@@ -19,13 +19,22 @@ export function money(v: number | undefined): string {
   return isNum(v) ? `$${v.toFixed(2)}` : EMPTY;
 }
 
-/** Market cap arrives from Finnhub in millions. */
-export function marketCap(millions: number | undefined): string {
+/** A large dollar figure held in millions, scaled to M / B / T. Market cap
+ *  arrives from Finnhub that way, and RPO is curated in the same unit so that
+ *  one formatter serves both. */
+export function usdMillions(millions: number | undefined): string {
   if (!isNum(millions)) return EMPTY;
   const m = millions;
   if (m >= 1_000_000) return `$${(m / 1_000_000).toFixed(2)}T`;
   if (m >= 1_000) return `$${(m / 1_000).toFixed(1)}B`;
   return `$${m.toFixed(0)}M`;
+}
+
+export const marketCap = usdMillions;
+
+/** A string value that may be absent — a credit rating, a segment label. */
+export function text(v: string | undefined): string {
+  return typeof v === 'string' && v.trim() !== '' ? v : EMPTY;
 }
 
 /** Sign class for colouring deltas. Never returns a colour for undefined, so a

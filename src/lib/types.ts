@@ -47,6 +47,16 @@ export interface StockSnapshot {
   dividendGrowth5Y?: number;
   fcfYield?: number;
 
+  // Reference: hand-curated, not collected. See data/reference.yaml.
+  /** Long-term issuer credit rating, canonical S&P/Fitch spelling. */
+  creditRating?: string;
+  creditRatingAgency?: string;
+  creditRatingAsOf?: string;
+  /** Remaining performance obligation, in millions of USD — as marketCap is. */
+  rpo?: number;
+  rpoAsOf?: string;
+  rpoSource?: string;
+
   /** Non-fatal problems collecting this symbol, surfaced in the UI. */
   errors?: string[];
 }
@@ -62,6 +72,17 @@ export interface WatchlistEntry {
   ticker: string;
   name: string;
   sector?: string;
+}
+
+/** One ticker's hand-curated reference values. Every field is optional: this
+ *  file is filled in as figures are verified, not all at once. */
+export interface ReferenceEntry {
+  creditRating?: string;
+  creditRatingAgency?: string;
+  creditRatingAsOf?: string;
+  rpo?: number;
+  rpoAsOf?: string;
+  rpoSource?: string;
 }
 
 export interface UniverseEntry {

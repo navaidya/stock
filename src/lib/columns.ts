@@ -1,5 +1,6 @@
 import type { StockSnapshot } from './types.ts';
-import { EMPTY, marketCap, money, num, pct, signedPct, trend } from './format.ts';
+import { EMPTY, marketCap, money, num, pct, signedPct, text, trend, usdMillions } from './format.ts';
+import { ratingRank } from './rating.ts';
 
 /** Column definitions per page.
  *
@@ -13,15 +14,43 @@ import { EMPTY, marketCap, money, num, pct, signedPct, trend } from './format.ts
  *  390px, which is the width this dashboard is mostly read at. */
 
 export interface Column {
+  /** Also the sort key and the `/faq#col-<key>` anchor. Where it names a
+   *  snapshot field — which it does for every column bar the exceptions that
+   *  declare `sort` — that field is what the column sorts on. */
   key: string;
   label: string;
-  /** Longer explanation shown on hover and in the expanded card. */
+  /** Longer explanation shown on hover and in the expanded card. The full
+   *  explanation lives in the glossary, which every label links to. */
   help?: string;
   primary?: boolean;
   render: (s: StockSnapshot) => string;
+  /** Orderable value, where it differs from the field named by `key`. A credit
+   *  rating displays as `AA-` and orders by its position on the scale. */
+  sort?: (s: StockSnapshot) => number | string | undefined;
   trend?: (s: StockSnapshot) => ReturnType<typeof trend>;
   align?: 'left' | 'right';
 }
+
+/** Issuer credit quality, as one agency states it. Shared by the pages that
+ *  care about balance sheets: the home view, and the dividend view where a
+ *  stretched balance sheet threatens the payout before anything else shows. */
+const creditRatingColumn: Column = {
+  key: 'creditRating',
+  label: 'Credit',
+  help: 'Long-term issuer credit rating. Hand-curated and dated — see the FAQ',
+  align: 'left',
+  render: (s) => text(s.creditRating),
+  // Sorts by position on the scale, not alphabetically: ascending puts AAA
+  // first and unrated names last.
+  sort: (s) => ratingRank(s.creditRating),
+};
+
+const rpoColumn: Column = {
+  key: 'rpo',
+  label: 'RPO',
+  help: 'Remaining performance obligation — contracted revenue not yet recognised. Only software and cloud companies report it',
+  render: (s) => usdMillions(s.rpo),
+};
 
 const identity: Column[] = [
   {
@@ -151,6 +180,8 @@ export const homeColumns: Column[] = [
     help: 'Current assets to current liabilities. Below 1 is worth a look',
     render: (s) => num(s.currentRatio, 2),
   },
+  creditRatingColumn,
+  rpoColumn,
   {
     key: 'dividendYield',
     label: 'Yield',
@@ -211,6 +242,9 @@ export const aiColumns: Column[] = [
     help: 'Volatility relative to the market. These names run hot',
     render: (s) => num(s.beta, 2),
   },
+  // The AI buildout is being financed with debt as much as with cash flow, so
+  // who is investment grade and who is not is part of reading this page.
+  creditRatingColumn,
 ];
 
 /** Dividends: yield alone is a trap — a high yield usually means the price
@@ -251,6 +285,7 @@ export const dividendColumns: Column[] = [
     help: 'Leverage. A stretched balance sheet threatens the dividend first',
     render: (s) => num(s.debtToEquity, 2),
   },
+  creditRatingColumn,
   {
     key: 'peTTM',
     label: 'P/E',

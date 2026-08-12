@@ -27,7 +27,11 @@ not answer "what should I buy."
 
 - Curated ticker lists maintained as source-controlled YAML.
 - Scheduled collection of public market data into a committed JSON file.
-- Three static views over that data: watchlist, AI-exposure, dividends.
+- Hand-curated public reference data the API does not carry — issuer credit
+  ratings, remaining performance obligation — each value dated at its source.
+- Three static views over that data: watchlist, AI-exposure, dividends, plus a
+  glossary page explaining every column.
+- Client-side sorting of any column on any view.
 - Deterministic derived metrics computed from collected fields.
 
 ### Non-goals
@@ -58,11 +62,11 @@ data/ai-universe.yaml┤
                      │            v
                      │    data/market.json
                      │            │
-                     │            │ (3) commit triggers deploy
-                     v            v
+data/reference.yaml ─┤            │ (3) commit triggers deploy
+  (hand-curated)     v            v
               src/lib/data.ts ──> Astro build ──> dist/ ──> GitHub Pages
                                         ^
-                          src/lib/columns.ts, format.ts (pure)
+              src/lib/columns.ts, format.ts, sort.ts, rating.ts (pure)
 ```
 
 Three boundaries matter:
@@ -120,6 +124,7 @@ empty list is the goal, not the assumption.
 | `COL-2` | No `FINNHUB_API_KEY` secret is configured on the repository. | The collector exits 1 on every scheduled run. No data has ever been collected, so every column on the published dashboard is blank. | **Open** — needs a manual step outside the repo, and is the only remaining blocker to data appearing |
 | `SEC-4` | `data/watchlist.yaml` is committed and labelled "Home page watchlist" with 15 specific tickers, and the home page describes it as "Tracked positions and watchlist". | A personal watchlist is personal information in a public repo. Already in git history, so removal requires a history rewrite. | **Open** — needs a decision |
 | `COL-3`, `COL-4`, `COL-5` | The collector's pacing and failure-retention logic is not covered by any test. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect |
+| `MOD-24` | The seed values in `data/reference.yaml` were written from an agent's recall of public filings and rating actions, not read off a primary source. Each carries an `asOf` date and a source note, but none has been checked against it. | Credit ratings and RPO figures are shown on the dashboard as facts. A wrong rating is precisely the substituted value `SYS-7` exists to prevent. | **Open** — every seeded value needs verification against the issuer's rating page or filing; the mechanism is correct, the data is provisional |
 
 ## 7. Glossary
 
@@ -130,5 +135,7 @@ empty list is the goal, not the assumption.
 | **Collection** | One run of `scripts/collect.mjs`, producing one `data/market.json`. |
 | **Hydration** | Merging a curated entry with its collected snapshot for rendering. A curated entry with no snapshot still produces a row. |
 | **Primary column** | A column that stays visible on a phone without expanding the card. |
+| **Reference value** | A hand-curated public fact the API does not carry — a credit rating, an RPO figure — dated at its source in `data/reference.yaml`. |
+| **RPO** | Remaining performance obligation: contracted revenue not yet recognised. A backlog figure, disclosed quarterly in the filings. |
 | **Stale** | Data older than 24 hours, or never collected. Surfaced in the UI, never hidden. |
 | **Free tier** | Finnhub's no-cost plan: 60 calls/minute, and an unpredictable subset of metrics per symbol. |

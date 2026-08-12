@@ -2,11 +2,11 @@
 import Base from '../layouts/Base.astro';
 import StockTable from '../components/StockTable.astro';
 import { aiColumns } from '../lib/columns.ts';
-import { hydrate, loadMarketData, loadUniverse } from '../lib/data.ts';
+import { hydrate, loadMarketData, loadReference, loadUniverse } from '../lib/data.ts';
 
 const market = loadMarketData();
 const { segments, universe } = loadUniverse();
-const stocks = hydrate(universe, market);
+const stocks = hydrate(universe, market, loadReference());
 
 // Group by segment so the supply chain reads top to bottom, rather than as one
 // undifferentiated list of twenty tickers.

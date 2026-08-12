@@ -1,0 +1,265 @@
+---
+import Base from '../layouts/Base.astro';
+import { aiColumns, dividendColumns, homeColumns } from '../lib/columns.ts';
+import { GROUPS, glossary } from '../lib/glossary.ts';
+import { loadMarketData, loadReference } from '../lib/data.ts';
+import { usdMillions } from '../lib/format.ts';
+import { withBase } from '../lib/url.ts';
+
+const market = loadMarketData();
+const reference = loadReference();
+
+// Which pages show a column, worked out from the column sets themselves so the
+// FAQ cannot drift from what is actually rendered.
+const pages: Array<{ label: string; href: string; columns: typeof homeColumns }> = [
+  { label: 'My stocks', href: '/', columns: homeColumns },
+  { label: 'AI', href: '/ai', columns: aiColumns },
+  { label: 'Dividends', href: '/dividends', columns: dividendColumns },
+];
+
+const usedOn = new Map<string, string[]>();
+for (const page of pages) {
+  for (const column of page.columns) {
+    usedOn.set(column.key, [...(usedOn.get(column.key) ?? []), page.label]);
+  }
+}
+
+const labels = new Map<string, string>();
+for (const page of pages) for (const c of page.columns) labels.set(c.key, c.label);
+
+const entries = [...usedOn.keys()]
+  .map((key) => ({ key, label: labels.get(key)!, ...glossary[key], pages: usedOn.get(key)! }))
+  .filter((e) => e.term);
+
+const byGroup = GROUPS.map((group) => ({
+  group,
+  entries: entries.filter((e) => e.group === group),
+})).filter((g) => g.entries.length > 0);
+
+const referenceRows = Object.entries(reference).sort(([a], [b]) => a.localeCompare(b));
+---
+
+<Base
+  title="FAQ"
+  subtitle="What every column means, how it misleads, and where the numbers come from. Each column label on the other pages links straight to its entry here."
+  generatedAt={market.generatedAt}
+>
+  <nav class="toc" aria-label="Column groups">
+    {byGroup.map((g) => <a href={`#${g.group.replace(/\s+/g, '-').toLowerCase()}`}>{g.group}</a>)}
+    <a href="#reference">Curated values</a>
+    <a href="#how">How this works</a>
+  </nav>
+
+  {
+    byGroup.map((g) => (
+      <section>
+        <h2 id={g.group.replace(/\s+/g, '-').toLowerCase()}>{g.group}</h2>
+        {g.entries.map((entry) => (
+          <article id={`col-${entry.key}`}>
+            <h3>
+              <span class="label">{entry.label}</span>
+              <span class="term">{entry.term}</span>
+            </h3>
+            <p>{entry.what}</p>
+            <p>{entry.why}</p>
+            {entry.watch && (
+              <p class="watch">
+                <strong>Where it misleads.</strong> {entry.watch}
+              </p>
+            )}
+            <p class="meta">
+              Shown on {entry.pages.join(', ')} · sort key <code>{entry.key}</code>
+            </p>
+          </article>
+        ))}
+      </section>
+    ))
+  }
+
+  <section>
+    <h2 id="reference">Curated values, and how current they are</h2>
+    <p>
+      Credit ratings and RPO are not on the market data API. They are typed by
+      hand into <code>data/reference.yaml</code> from public rating actions and
+      quarterly filings, which means nothing refreshes them — so each one carries
+      the date it was last checked. A value here is only as good as that date.
+    </p>
+    <p class="watch">
+      <strong>These seeds are unverified.</strong> They were entered from recall
+      to give the columns something to render, and have not been checked against
+      an agency page or a filing. Verify before relying on any of them.
+    </p>
+    {
+      referenceRows.length > 0 ? (
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" class="left">Ticker</th>
+                <th scope="col" class="left">Rating</th>
+                <th scope="col" class="left">Agency</th>
+                <th scope="col" class="left">As of</th>
+                <th scope="col" class="left">RPO</th>
+                <th scope="col" class="left">As of</th>
+                <th scope="col" class="left">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {referenceRows.map(([ticker, entry]) => (
+                <tr>
+                  <td class="left"><strong>{ticker}</strong></td>
+                  <td class="left">{entry.creditRating ?? '—'}</td>
+                  <td class="left">{entry.creditRatingAgency ?? '—'}</td>
+                  <td class="left">{entry.creditRatingAsOf ?? '—'}</td>
+                  <td class="left">{entry.rpo ? usdMillions(entry.rpo) : '—'}</td>
+                  <td class="left">{entry.rpoAsOf ?? '—'}</td>
+                  <td class="left">{entry.rpoSource ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="empty">No reference values are curated yet.</p>
+      )
+    }
+  </section>
+
+  <section>
+    <h2 id="how">How this dashboard works</h2>
+
+    <article>
+      <h3><span class="term">Where the numbers come from</span></h3>
+      <p>
+        Market data is collected from Finnhub by a scheduled job that runs a few
+        times on weekdays, writes the result into the repository, and rebuilds
+        the site. Nothing is fetched while you are reading: every page is a
+        static file, so what you see is what was collected at the time printed at
+        the top of every page.
+      </p>
+      <p>
+        That means the refresh floor is minutes to hours, not seconds. It suits
+        end-of-day and weekend reading, and it is not a quote screen. Where the
+        age stamp turns red, the data is more than a day old.
+      </p>
+    </article>
+
+    <article>
+      <h3><span class="term">Why so many cells show an em dash</span></h3>
+      <p>
+        An em dash — means the value was not available, and it is never a zero, a
+        default, or an interpolation. The free data tier omits metrics
+        unpredictably and differently per company, and some metrics genuinely do
+        not apply: an ETF has no P/E, a semiconductor company reports no RPO, an
+        unrated issuer has no credit rating.
+      </p>
+      <p>
+        This is deliberate, because a substituted number is a number someone
+        might act on. For the same reason, missing values sort to the bottom in
+        both directions — sorting P/E ascending shows the lowest P/E on record,
+        not every company the API had nothing for.
+      </p>
+    </article>
+
+    <article>
+      <h3><span class="term">How sorting works</span></h3>
+      <p>
+        Every column sorts, both ways. On a wide screen each header carries an up
+        and a down arrow; on a phone the control above the cards does the same
+        job. Sorting compares the underlying value rather than the text on
+        screen, so $1.20T ranks above $900M, and credit ratings order by the
+        agency scale — ascending puts AAA first and unrated names last.
+      </p>
+      <p>
+        Rows with equal values keep their existing order, so a sort never
+        scrambles what was there before it.
+      </p>
+    </article>
+
+    <article>
+      <h3><span class="term">What this dashboard will not do</span></h3>
+      <p>
+        It shows collected data and metrics computed from it. It does not rate,
+        score, rank by attractiveness, or recommend anything, and no list on it —
+        including the AI page — is a buy list. Sorting by a metric you chose is
+        you asking a question about that metric; it is not the dashboard forming
+        a view.
+      </p>
+      <p>
+        None of it is investment advice, none of it is guaranteed accurate, and
+        the numbers are late by construction.
+      </p>
+    </article>
+
+    <article>
+      <h3><span class="term">What is deliberately not here</span></h3>
+      <p>
+        No holdings, share counts, cost basis, or profit and loss — not on the
+        pages and not in the repository, which is public. The lists are ticker
+        lists. Anything position-shaped belongs in a local file that is never
+        committed.
+      </p>
+    </article>
+
+    <p class="back"><a href={withBase('/')}>← Back to the dashboard</a></p>
+  </section>
+
+  <style>
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+    }
+    .toc a {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+    }
+    .toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+    section { margin-bottom: 2.5rem; }
+    h2 {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 5rem;
+    }
+    article {
+      margin: 0 0 1.25rem;
+      scroll-margin-top: 5rem;
+      max-width: 68ch;
+    }
+    article:target { background: var(--card); border-radius: 8px; padding: 0.5rem 0.75rem; }
+    h3 { margin: 0 0 0.35rem; font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
+    .label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 0.1rem 0.4rem;
+      white-space: nowrap;
+    }
+    .term { font-weight: 600; }
+    article p { margin: 0 0 0.5rem; }
+    .watch { color: var(--muted); }
+    .meta { color: var(--muted); font-size: 0.78rem; }
+    .meta code { font-size: 0.75rem; }
+    .back { margin-top: 1.5rem; }
+    .back a { color: var(--accent); }
+    .empty { color: var(--muted); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    th, td { padding: 0.4rem 0.6rem; text-align: left; white-space: nowrap; }
+    thead th { background: var(--card); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 0.78rem; }
+    tbody tr:nth-child(even) { background: var(--card); }
+  </style>
+</Base>

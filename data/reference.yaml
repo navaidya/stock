@@ -1,0 +1,170 @@
+# Hand-curated reference values the market data API does not carry.
+#
+# PUBLIC REPO: public facts about companies only — ratings published by the
+# agencies, figures disclosed in filings. Never anything about a position.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# EVERY VALUE BELOW IS UNVERIFIED.
+#
+# These seeds were written from an agent's recall of public rating actions and
+# earnings releases, not read off a primary source. They are here so the columns
+# have something to render and so the shape of the file is obvious — not because
+# they are known to be right. Before trusting any of them on the dashboard,
+# check it against the source named in the entry:
+#
+#   credit rating — the issuer's page on standardandpoors.com / moodys.com,
+#                   or the "credit ratings" page in the company's IR site
+#   RPO           — the revenue recognition note, or the "remaining performance
+#                   obligations" line in the latest 10-Q/10-K or press release
+#
+# Correct anything wrong, and move its asOf to the date you checked. Tracked as
+# an open gap against MOD-24 in specs/SPEC.md.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Schema, per ticker — every field optional:
+#
+#   creditRating:        long-term ISSUER rating. S&P/Fitch (`BBB+`) or Moody's
+#                        (`Baa1`) notation; stored canonically as S&P's. Anything
+#                        off the scale is dropped rather than displayed, so leave
+#                        an unrated issuer out entirely instead of writing `NR`.
+#   creditRatingAgency:  who issued it, since the scales are not interchangeable
+#                        in practice even where the notches line up.
+#   creditRatingAsOf:    ISO date the rating was checked or last affirmed.
+#   rpo:                 remaining performance obligation, in MILLIONS of USD —
+#                        the same unit as market cap. 600000 is $600B.
+#   rpoAsOf:             the fiscal period end the figure belongs to, not the
+#                        date it was announced.
+#   rpoSource:           which release or filing it came from.
+#
+# Most companies do not report RPO at all. It is a software and cloud
+# disclosure — contracted revenue not yet recognised. Its absence for a
+# semiconductor or a utility is normal, not a gap to fill.
+
+reference:
+  ORCL:
+    creditRating: BBB
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+    rpo: 600000
+    rpoAsOf: 2026-05-31
+    rpoSource: Q4 FY2026 results — figure as described by the repository owner
+
+  CRM:
+    creditRating: A+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+    rpo: 60000
+    rpoAsOf: 2026-01-31
+    rpoSource: FY2026 results, total RPO
+
+  NVDA:
+    creditRating: AA-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  META:
+    creditRating: AA-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  AVGO:
+    creditRating: BBB
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  UNH:
+    creditRating: A
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  VZ:
+    creditRating: BBB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  PFE:
+    creditRating: A
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  NFLX:
+    creditRating: A
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  CMG:
+    creditRating: BBB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  TSM:
+    creditRating: AA-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  ASML:
+    creditRating: A+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  AMAT:
+    creditRating: A
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  LRCX:
+    creditRating: A
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  MU:
+    creditRating: BBB
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  AMD:
+    creditRating: A-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  MRVL:
+    creditRating: BBB-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  WDC:
+    creditRating: BB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  STX:
+    creditRating: BB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  ETN:
+    creditRating: A-
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  VRT:
+    creditRating: BB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  CEG:
+    creditRating: BBB+
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+  GEV:
+    creditRating: BBB
+    creditRatingAgency: S&P
+    creditRatingAsOf: 2026-08-12
+
+# Deliberately absent, and not an oversight:
+#   ARM, PLTR, ALAB, FN, COHR, SMCI — no public long-term issuer rating found;
+#     an unrated issuer renders as an em dash, which is the correct answer.
+#   CRWV — rated, but in the high-yield range and moved during 2025. Left out
+#     until it can be read off a primary source rather than recalled.
+#   VOO — an ETF has no issuer credit rating. Its holdings do.
