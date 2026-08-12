@@ -72,10 +72,6 @@
       "Bash(find * -exec*)",
       "Bash(find * -ok*)",
 
-      "Bash(npm install *)",
-      "Bash(npm i *)",
-      "Bash(npm add *)",
-
       "Read(./.env)",
       "Read(./.env.*)"
     ]

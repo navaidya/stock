@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import StockTable from '../components/StockTable.astro';
+import { homeColumns } from '../lib/columns.ts';
+import { hydrate, loadMarketData, loadWatchlist } from '../lib/data.ts';
+
+const market = loadMarketData();
+const stocks = hydrate(loadWatchlist(), market);
+---
+
+<Base
+  title="My stocks"
+  subtitle="Tracked positions and watchlist. Tickers only — no holdings or cost basis are stored in this repository."
+  generatedAt={market.generatedAt}
+>
+  <StockTable columns={homeColumns} stocks={stocks} />
+</Base>

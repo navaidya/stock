@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import StockTable from '../components/StockTable.astro';
+import { aiColumns } from '../lib/columns.ts';
+import { hydrate, loadMarketData, loadUniverse } from '../lib/data.ts';
+
+const market = loadMarketData();
+const { segments, universe } = loadUniverse();
+const stocks = hydrate(universe, market);
+
+// Group by segment so the supply chain reads top to bottom, rather than as one
+// undifferentiated list of twenty tickers.
+const grouped = Object.entries(segments).map(([key, label]) => ({
+  key,
+  label,
+  rows: stocks.filter((s) => s.segment === key),
+}));
+---
+
+<Base
+  title="AI exposure"
+  subtitle="Companies with material exposure to AI infrastructure buildout, grouped by segment. This is a classification of business exposure, not a recommendation list."
+  generatedAt={market.generatedAt}
+>
+  {
+    grouped.map((group) =>
+      group.rows.length > 0 ? (
+        <section>
+          <h2>{group.label}</h2>
+          <StockTable columns={aiColumns} stocks={group.rows} />
+        </section>
+      ) : null,
+    )
+  }
+
+  <style>
+    section { margin-bottom: 2rem; }
+    h2 { font-size: 1rem; color: var(--muted); font-weight: 600; margin: 0 0 0.5rem; }
+  </style>
+</Base>

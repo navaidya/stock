@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import StockTable from '../components/StockTable.astro';
+import { dividendColumns, payingDividend } from '../lib/columns.ts';
+import { hydrate, loadMarketData, loadUniverse, loadWatchlist } from '../lib/data.ts';
+
+const market = loadMarketData();
+
+// Draw from both lists, deduplicated, then keep only names that actually pay.
+const all = [...loadWatchlist(), ...loadUniverse().universe];
+const seen = new Set<string>();
+const unique = all.filter((e) => (seen.has(e.ticker) ? false : seen.add(e.ticker)));
+
+const stocks = hydrate(unique, market)
+  .filter(payingDividend)
+  .sort((a, b) => (b.dividendYield ?? 0) - (a.dividendYield ?? 0));
+---
+
+<Base
+  title="Dividends"
+  subtitle="Dividend payers across both lists, highest yield first. Yield alone is a weak signal — a high yield often means the price fell. The payout and cash flow columns speak to whether it is sustainable."
+  generatedAt={market.generatedAt}
+>
+  {
+    stocks.length > 0 ? (
+      <StockTable columns={dividendColumns} stocks={stocks} />
+    ) : (
+      <p class="empty">
+        No dividend data collected yet. Run the collector, or wait for the
+        scheduled refresh.
+      </p>
+    )
+  }
+
+  <style>
+    .empty { color: var(--muted); }
+  </style>
+</Base>

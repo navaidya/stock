@@ -1,0 +1,31 @@
+{
+  "quote": { "c": 182.45, "dp": 1.83, "h": 183.9, "l": 179.2, "pc": 179.17 },
+  "profile": {
+    "name": "NVIDIA Corp",
+    "finnhubIndustry": "Semiconductors",
+    "marketCapitalization": 4432000
+  },
+  "metrics": {
+    "metric": {
+      "52WeekHigh": 212.19,
+      "52WeekLow": 86.62,
+      "52WeekPriceReturnDaily": 41.7,
+      "beta": 2.11,
+      "peTTM": 48.3,
+      "psTTM": 24.9,
+      "pbQuarterly": 41.2,
+      "pfcfShareTTM": 55.0,
+      "currentEv/freeCashFlowTTM": 56.1,
+      "revenueGrowthTTMYoy": 62.4,
+      "epsGrowthTTMYoy": 71.9,
+      "grossMarginTTM": 74.9,
+      "operatingMarginTTM": 61.2,
+      "roeTTM": 105.3,
+      "totalDebt/totalEquityQuarterly": 0.12,
+      "currentRatioQuarterly": 4.1,
+      "dividendYieldIndicatedAnnual": 0.02,
+      "payoutRatioTTM": 1.1,
+      "dividendGrowthRate5Y": 0.0
+    }
+  }
+}

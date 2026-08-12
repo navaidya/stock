@@ -1,0 +1,37 @@
+name: Refresh market data
+
+on:
+  schedule:
+    # Weekdays, twice during US market hours and once after the close.
+    # GitHub cron is best effort and is often delayed under load, so treat
+    # these as approximate — the dashboard shows its own data age.
+    - cron: '35 14 * * 1-5'
+    - cron: '35 18 * * 1-5'
+    - cron: '15 21 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run collect
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git diff --quiet -- data/market.json || git commit -am 'chore: refresh market data'
+      - run: git push
