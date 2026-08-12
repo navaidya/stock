@@ -19,8 +19,8 @@ function git(...args: string[]): string {
   return execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
 }
 
-function runScript(): string {
-  return execFileSync('bash', [SCRIPT], { cwd: repo, encoding: 'utf8' });
+function runScript(...args: string[]): string {
+  return execFileSync('bash', [SCRIPT, ...args], { cwd: repo, encoding: 'utf8' });
 }
 
 function writeMarketData(generatedAt: string): void {
@@ -96,5 +96,41 @@ describe('commit-data.sh', () => {
   it('[COL-16] fails loudly when collection produced no file', () => {
     expect(() => runScript()).toThrow();
     expect(git('rev-list', '--count', 'HEAD')).toBe('1');
+  });
+});
+
+describe('commit-data.sh --optional', () => {
+  it('[COL-20] skips a missing optional file instead of failing the run', () => {
+    const output = runScript('data/brief.json', 'chore: refresh daily brief', '--optional');
+
+    expect(output).toContain('skipping');
+    // Nothing committed, and — the point — nothing thrown: a repository with no
+    // model key must still complete a refresh.
+    expect(git('rev-list', '--count', 'HEAD')).toBe('1');
+  });
+
+  it('[COL-20] commits the optional file when it does exist', () => {
+    writeFileSync(join(repo, 'data/brief.json'), JSON.stringify({ text: 'A note.' }));
+
+    runScript('data/brief.json', 'chore: refresh daily brief', '--optional');
+
+    expect(git('rev-list', '--count', 'HEAD')).toBe('2');
+    expect(git('log', '-1', '--pretty=%s')).toBe('chore: refresh daily brief');
+    expect(git('ls-files', 'data/brief.json')).toBe('data/brief.json');
+  });
+
+  it('[COL-16] still fails on a missing file when it is not marked optional', () => {
+    expect(() => runScript('data/brief.json', 'chore: refresh daily brief')).toThrow();
+    expect(git('rev-list', '--count', 'HEAD')).toBe('1');
+  });
+
+  it('[COL-15] commits only the named file, leaving the other output alone', () => {
+    writeMarketData('2026-08-12T14:35:00Z');
+    writeFileSync(join(repo, 'data/brief.json'), JSON.stringify({ text: 'A note.' }));
+
+    runScript('data/brief.json', 'chore: refresh daily brief', '--optional');
+
+    expect(git('ls-files', 'data/market.json')).toBe('');
+    expect(git('status', '--porcelain')).toContain('data/market.json');
   });
 });

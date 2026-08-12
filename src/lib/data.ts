@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
+import { normalizeStoredBrief, type StoredBrief } from './brief.ts';
 import { daysUntil } from './dates.ts';
 import { normalizeReference } from './reference.ts';
 import type {
@@ -34,6 +35,19 @@ export function loadReference(): Record<string, ReferenceEntry> {
     return normalizeReference(parse(readFileSync(path, 'utf8')));
   } catch {
     return {};
+  }
+}
+
+/** The machine-written brief over the last collection, when one exists.
+ *  Absent, malformed, or empty all mean the same thing here: no brief, and a
+ *  page that renders without one rather than around a hole (BRF-2). */
+export function loadBrief(): StoredBrief | undefined {
+  const path = join(DATA, 'brief.json');
+  if (!existsSync(path)) return undefined;
+  try {
+    return normalizeStoredBrief(JSON.parse(readFileSync(path, 'utf8')));
+  } catch {
+    return undefined;
   }
 }
 

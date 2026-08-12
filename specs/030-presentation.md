@@ -83,6 +83,24 @@ misleads.
   JavaScript the page renders in its prerendered order, which is meaningful on
   its own, and no control is left in a broken state.
 
+### Filtering
+
+- **UI-34** `MUST` `test` — The filter accepts `field op value` comparisons over
+  any numeric column, and bare words matching ticker, name, sector or segment.
+  Several clauses in one query are ANDed.
+- **UI-35** `MUST` `test` — A row whose value for a compared field is missing
+  never matches that comparison, in either direction. `pe < 25` must not match
+  a company the API had no P/E for (`SYS-7`).
+- **UI-36** `MUST` `test` — An unparseable clause filters nothing out and is
+  reported. A typo must never silently produce an empty table, which reads
+  identically to "nothing qualifies".
+- **UI-37** `MUST` `manual` — Filtering is client-side and progressive: with no
+  JavaScript the control is hidden and every row renders.
+- **UI-38** `MUST` `manual` — The control states how many rows of how many are
+  showing, so a filter is never invisible.
+- **UI-39** `MUST` `manual` — Filtering and sorting compose: filtering hides
+  rows from the current order rather than resetting it.
+
 ### Column glossary
 
 - **UI-28** `MUST` `build` — `/faq` documents every column that any page shows,
@@ -131,6 +149,14 @@ Most columns answer "what is this worth", which changes slowly. These two answer
   row rather than swallowed.
 - **UI-18** `MUST` `manual` — A page or section with no rows shows an
   explanatory empty state, not a bare heading over nothing.
+
+### The daily brief
+
+- **UI-40** `MUST` `manual` — The home page renders the brief when one exists,
+  labelled as machine-generated and carrying its own timestamp. With no brief
+  the page renders nothing in its place — never an empty panel.
+- **UI-41** `MUST` `manual` — The brief is visually subordinate to the table.
+  The numbers are the dashboard; the brief is a note about them.
 
 ### Page-specific
 

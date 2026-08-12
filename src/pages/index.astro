@@ -2,10 +2,16 @@
 import Base from '../layouts/Base.astro';
 import StockTable from '../components/StockTable.astro';
 import { homeColumns } from '../lib/columns.ts';
-import { hydrate, loadMarketData, loadReference, loadWatchlist } from '../lib/data.ts';
+import { freshness, hydrate, loadBrief, loadMarketData, loadReference, loadWatchlist } from '../lib/data.ts';
 
 const market = loadMarketData();
 const stocks = hydrate(loadWatchlist(), market, loadReference());
+
+// Absent unless a model key is configured in CI. Rendered as a text node, never
+// as markup — the model's output crosses the same trust boundary the API's does
+// (BRF-8).
+const brief = loadBrief();
+const briefAge = brief ? freshness(brief.dataGeneratedAt) : undefined;
 ---
 
 <Base
@@ -13,5 +19,38 @@ const stocks = hydrate(loadWatchlist(), market, loadReference());
   subtitle="Tracked positions and watchlist. Tickers only — no holdings or cost basis are stored in this repository."
   generatedAt={market.generatedAt}
 >
+  {
+    brief && (
+      <aside class="brief">
+        <p class="brief-label">
+          Machine-written by {brief.model} from data {briefAge?.label ?? 'of unknown age'} ·
+          describes the table below, recommends nothing
+        </p>
+        {brief.text.split('\n\n').map((paragraph) => (
+          <p>{paragraph}</p>
+        ))}
+      </aside>
+    )
+  }
+
   <StockTable columns={homeColumns} stocks={stocks} />
+
+  <style>
+    /* Subordinate to the table on purpose: the numbers are the dashboard and
+       this is a note about them (UI-41). */
+    .brief {
+      border-left: 2px solid var(--line);
+      padding: 0 0 0 0.9rem;
+      margin: 0 0 1.25rem;
+      max-width: 68ch;
+      font-size: 0.9rem;
+    }
+    .brief p { margin: 0 0 0.6rem; }
+    .brief-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+  </style>
 </Base>

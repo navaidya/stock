@@ -1,0 +1,91 @@
+# 060 — The daily brief
+
+**Prefix:** `BRF` · **Status:** active · **Implements:** `SYS-1`, `SYS-2`, `SYS-4`, `SYS-5`, `SYS-6`
+
+Owns the machine-written summary of each collection: how it is generated, what
+is sent, what it is forbidden to say, and what happens when it fails.
+
+**Implementation:** [scripts/brief.mjs](../scripts/brief.mjs),
+[src/lib/brief.ts](../src/lib/brief.ts),
+[.github/workflows/refresh-data.yml](../.github/workflows/refresh-data.yml)
+
+---
+
+## Context
+
+The dashboard answers "how do these names look on the numbers" but not "what
+changed since yesterday" — that question needs prose, and prose over thirty
+tickers is exactly the work a language model is good at and a person is not.
+
+The generator runs where the collector runs: in GitHub Actions, on a schedule,
+with the key in repository secrets. That placement is not incidental. A chat box
+on the page would need a key in the browser, which `SYS-2` forbids outright; the
+brief is the shape this feature can take without a backend. The cost of that is
+that it is a broadcast, not a conversation — written once per collection, read
+whenever.
+
+Two constraints shape everything else. **It may not advise.** `SYS-5` forbids
+recommendations, ratings, and orderings by investment quality, and a fluent
+paragraph is a far more persuasive place to break that rule than a table cell —
+so the prohibition lives in the system prompt, in the review of the output, and
+in this spec. **Its output is untrusted.** The model's text crosses the same
+boundary a Finnhub response crosses (`SYS-6`): it is validated, normalized to
+plain text, and never rendered as markup.
+
+## Requirements
+
+### Execution and secrets
+
+- **BRF-1** `MUST` `manual` — The brief is generated only inside GitHub Actions,
+  by `scripts/brief.mjs`, using a key from repository secrets. The deployed site
+  never calls a model API, and no key reaches the client (`SYS-1`, `SYS-2`).
+- **BRF-2** `MUST` `test` — With no `ANTHROPIC_API_KEY` the generator writes
+  nothing and exits 0. A repository without the secret still collects data,
+  still builds, and still deploys — the brief is additive, never a gate.
+- **BRF-3** `MUST` `test` — The payload is built only from fields already
+  present in the committed `data/market.json`, through an explicit field list.
+  Nothing else in the repository or environment is sent (`SEC-3`).
+- **BRF-9** `MUST` `manual` — Spend per run is bounded by trimming the payload to
+  that field list and by an explicit `max_tokens`. A runaway loop is not
+  possible: one request, one response, once per collection.
+
+### What it may say
+
+- **BRF-4** `MUST` `manual` — The system prompt forbids buy/sell
+  recommendations, price targets, ratings, and any ordering by investment
+  attractiveness, and requires the brief to describe only what is in the data it
+  was given (`SYS-5`).
+- **BRF-10** `MUST` `manual` — The brief describes public market data only. It
+  is never given, and so can never mention, a holding or a position (`SEC-7`).
+
+### Failure semantics
+
+- **BRF-5** `MUST` `test` — A refusal, a non-2xx response, an unparseable body,
+  or empty text leaves the previous brief in place rather than overwriting it
+  with a partial or empty one (`SYS-4`).
+- **BRF-6** `MUST` `test` — A stored brief records the text, the model that
+  wrote it, and the `generatedAt` of the data it describes. A brief with no
+  provenance is indistinguishable from a stale one.
+- **BRF-11** `MUST` `test` — `stop_reason` is checked before the response
+  content is read. A declined request must not be mistaken for an empty answer.
+
+### Rendering
+
+- **BRF-8** `MUST` `test` — Model output is normalized to plain text and
+  rendered as text. No markup from the model is ever interpreted (`SYS-6`).
+- **BRF-7** `MUST` `manual` — The rendered brief is labelled as machine-written
+  and carries the age of the data it describes, so it is never mistaken for a
+  human note or for something newer than the numbers beside it.
+
+## Notes
+
+The brief is deliberately not a chat. A conversation needs a key in the browser
+or a server to hold one, and both are excluded — see the non-goals in
+[SPEC.md](SPEC.md). If that trade is ever revisited, the change starts with
+`SYS-1`/`SYS-2`, not here.
+
+The natural next step in this area is a diff rather than a snapshot: the brief
+currently sees one collection and can say what is true, not what changed. Giving
+it the previous `market.json` as well would let it say "up 6% since yesterday's
+collection" — at the cost of storing a second snapshot, which the master spec
+currently excludes.

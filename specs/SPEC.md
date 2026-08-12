@@ -31,7 +31,8 @@ not answer "what should I buy."
   ratings, remaining performance obligation — each value dated at its source.
 - Three static views over that data: watchlist, AI-exposure, dividends, plus a
   glossary page explaining every column.
-- Client-side sorting of any column on any view.
+- Client-side sorting and filtering of any column on any view.
+- A short machine-written brief over each collection, generated in CI.
 - Deterministic derived metrics computed from collected fields.
 
 ### Non-goals
@@ -41,6 +42,12 @@ one of them is a change to this spec, not a feature.
 
 - **Real-time or intraday tick data.** See `SYS-3`.
 - **A backend, database, or server-side API.** See `SYS-1`.
+- **A chatbot on the page.** Interactive conversation needs a model API key at
+  request time, which means either a key in the browser (`SYS-2` forbids it) or
+  a server to hold one (`SYS-1` forbids that). The daily brief in
+  [060-daily-brief.md](060-daily-brief.md) is what this constraint permits: the
+  model runs in CI, where the key already lives, and writes once per collection.
+  A real chat is a change to `SYS-1`/`SYS-2`, not a feature request.
 - **User accounts, multi-user support, or personalization at runtime.**
 - **Portfolio tracking** — holdings, position sizes, cost basis, or P&L. See
   [040-privacy-and-secrets.md](040-privacy-and-secrets.md).
@@ -62,8 +69,13 @@ data/ai-universe.yaml┤
                      │            v
                      │    data/market.json
                      │            │
-data/reference.yaml ─┤            │ (3) commit triggers deploy
-  (hand-curated)     v            v
+                     │            │
+                     │    scripts/brief.mjs ──> Anthropic API
+                     │            │  (CI only, optional)
+                     │            v
+data/reference.yaml ─┤    data/brief.json
+  (hand-curated)     │            │ (3) commit triggers deploy
+                     v            v
               src/lib/data.ts ──> Astro build ──> dist/ ──> GitHub Pages
                                         ^
               src/lib/columns.ts, format.ts, sort.ts, rating.ts (pure)
@@ -110,6 +122,7 @@ These hold everywhere. Each child spec inherits them.
 | [030-presentation.md](030-presentation.md) | Presentation | `UI` | Pages, column sets, responsive behaviour, empty states |
 | [040-privacy-and-secrets.md](040-privacy-and-secrets.md) | Privacy | `SEC` | Public-repo constraints, secret handling |
 | [050-delivery.md](050-delivery.md) | Delivery | `DEL` | Build, test gate, deploy, dependency policy |
+| [060-daily-brief.md](060-daily-brief.md) | Daily brief | `BRF` | Model-written summary: generation, prohibitions, failure semantics |
 
 Process and conventions live in [README.md](README.md).
 
@@ -123,7 +136,8 @@ empty list is the goal, not the assumption.
 |---|---|---|---|
 | `COL-2` | No `FINNHUB_API_KEY` secret is configured on the repository. | The collector exits 1 on every scheduled run. No data has ever been collected, so every column on the published dashboard is blank. | **Open** — needs a manual step outside the repo, and is the only remaining blocker to data appearing |
 | `SEC-4` | `data/watchlist.yaml` is committed and labelled "Home page watchlist" with 15 specific tickers, and the home page describes it as "Tracked positions and watchlist". | A personal watchlist is personal information in a public repo. Already in git history, so removal requires a history rewrite. | **Open** — needs a decision |
-| `COL-3`, `COL-4`, `COL-5` | The collector's pacing and failure-retention logic is not covered by any test. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect |
+| `COL-4`, `COL-5`, `COL-11` | The collector's failure-retention logic is not covered by any test, because the run loop does its own I/O at module scope. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect. `COL-3` left this list when the pacing arithmetic moved into a tested pure function |
+| `BRF-2` | No `ANTHROPIC_API_KEY` secret is configured, so no brief is generated. | The home page renders without a brief, which is the specified degraded state rather than a defect. | **Open by choice** — closes when the secret is added; costs nothing until then |
 | `MOD-24` | The seed values in `data/reference.yaml` were written from an agent's recall of public filings and rating actions, not read off a primary source. Each carries an `asOf` date and a source note, but none has been checked against it. | Credit ratings and RPO figures are shown on the dashboard as facts. A wrong rating is precisely the substituted value `SYS-7` exists to prevent. | **Open** — every seeded value needs verification against the issuer's rating page or filing; the mechanism is correct, the data is provisional |
 
 ## 7. Glossary
@@ -137,5 +151,6 @@ empty list is the goal, not the assumption.
 | **Primary column** | A column that stays visible on a phone without expanding the card. |
 | **Reference value** | A hand-curated public fact the API does not carry — a credit rating, an RPO figure — dated at its source in `data/reference.yaml`. |
 | **RPO** | Remaining performance obligation: contracted revenue not yet recognised. A backlog figure, disclosed quarterly in the filings. |
+| **Brief** | The machine-written summary of one collection, in `data/brief.json`. Describes the data; never advises. |
 | **Stale** | Data older than 24 hours, or never collected. Surfaced in the UI, never hidden. |
 | **Free tier** | Finnhub's no-cost plan: 60 calls/minute, and an unpredictable subset of metrics per symbol. |

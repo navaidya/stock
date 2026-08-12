@@ -20,8 +20,17 @@ set -euo pipefail
 
 FILE="${1:-data/market.json}"
 MESSAGE="${2:-chore: refresh market data}"
+OPTIONAL="${3:-}"
 
+# Two kinds of missing file, and they must not be conflated (COL-16, COL-20).
+# The collector's output missing is a failure: something ran, reported success,
+# and produced nothing. The brief missing is routine — it is not generated at
+# all without a model key. The caller says which case it is.
 if [ ! -f "$FILE" ]; then
+  if [ "$OPTIONAL" = "--optional" ]; then
+    echo "$FILE was not produced; skipping (optional)."
+    exit 0
+  fi
   echo "error: $FILE does not exist — collection did not produce output." >&2
   exit 1
 fi

@@ -30,12 +30,19 @@ jobs:
       - run: npm run collect
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+      # Optional: writes nothing and exits 0 without ANTHROPIC_API_KEY, so a
+      # repository with no model key still collects, commits and deploys.
+      - run: npm run brief
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # Commit logic lives in a script so it can be tested (COL-6). The inline
-      # version this replaces silently discarded the first collection.
+      # version this replaces silently discarded the first collection. One
+      # commit per output file, each scoped to its own pathspec (COL-15).
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           ./scripts/commit-data.sh
+          ./scripts/commit-data.sh data/brief.json 'chore: refresh daily brief' --optional
       - run: git push
 
   # The push above is made with GITHUB_TOKEN, and GitHub does not trigger

@@ -27,10 +27,30 @@ const sortValues = stocks.map((s) =>
   Object.fromEntries(columns.map((c) => [c.key, sortValueOf(c, s) ?? null])),
 );
 
+// The filter needs the snapshot itself, not the sort keys: a query names
+// fields (`pe`, `yield`, `earnings`) rather than columns, so it can ask about a
+// field this page does not happen to show.
+const filterValues = stocks.map(({ errors, ...snapshot }) => snapshot);
+
 const faqLink = (key: string) => withBase(`/faq#col-${key}`);
 ---
 
 <div class="sortable">
+  <div class="controls" hidden>
+    <label class="filter">
+      <span class="visually-hidden">Filter rows</span>
+      <input
+        type="search"
+        data-filter
+        placeholder="Filter — try: pe &lt; 25 yield &gt; 2"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </label>
+    <output data-count class="count"></output>
+    <p data-filter-error class="filter-error" hidden></p>
+  </div>
+
   <div class="sortbar" hidden>
     <label>
       Sort by
@@ -146,10 +166,15 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
   <!-- Data, not code: inline verbatim rather than going through the bundler. -->
   <script is:inline type="application/json" data-sort-values set:html={JSON.stringify(sortValues)}
   />
+  <script is:inline type="application/json" data-filter-values
+    set:html={JSON.stringify(filterValues)}
+  />
 </div>
 
 <script>
   import { sortOrder, type SortDirection, type SortValue } from '../lib/sort.ts';
+  import { parseQuery, matches } from '../lib/query.ts';
+  import type { StockSnapshot } from '../lib/types.ts';
 
   // Progressive: the rows are already in a meaningful order when this runs, and
   // every control below is inert-but-harmless if it never does.
@@ -166,6 +191,47 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
 
     const select = root.querySelector<HTMLSelectElement>('[data-sort-select]');
     root.querySelector<HTMLElement>('.sortbar')!.hidden = false;
+
+    // --- Filtering -------------------------------------------------------
+    // Hides rows in place, so it composes with sorting rather than fighting
+    // it: the order is whatever the last sort left, minus what is hidden.
+    const filterPayload = root.querySelector('[data-filter-values]')?.textContent;
+    const snapshots: StockSnapshot[] = filterPayload ? JSON.parse(filterPayload) : [];
+    const input = root.querySelector<HTMLInputElement>('[data-filter]');
+    const count = root.querySelector<HTMLOutputElement>('[data-count]');
+    const errorBox = root.querySelector<HTMLElement>('[data-filter-error]');
+
+    function applyFilter(text: string) {
+      const query = parseQuery(text);
+      const nothingUsable = query.comparisons.length === 0 && query.terms.length === 0;
+      let shown = 0;
+
+      snapshots.forEach((snapshot, index) => {
+        // A query that parsed to nothing keeps every row: an empty table is
+        // what "nothing qualifies" looks like, and a typo must not fake it.
+        const visible = nothingUsable || matches(snapshot, query);
+        rows[index].hidden = !visible;
+        items[index].hidden = !visible;
+        if (visible) shown++;
+      });
+
+      if (count) {
+        count.textContent =
+          shown === snapshots.length ? `${shown} rows` : `${shown} of ${snapshots.length}`;
+      }
+      if (errorBox) {
+        errorBox.hidden = query.errors.length === 0;
+        errorBox.textContent = query.errors.length
+          ? `Ignored: ${query.errors.join(', ')} — check the field name against the FAQ.`
+          : '';
+      }
+    }
+
+    if (input && snapshots.length === rows.length) {
+      root.querySelector<HTMLElement>('.controls')!.hidden = false;
+      applyFilter('');
+      input.addEventListener('input', () => applyFilter(input.value));
+    }
 
     let active: { key: string; direction: SortDirection } | null = null;
 
@@ -254,6 +320,37 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
     color: var(--accent);
   }
   th[aria-sort='ascending'], th[aria-sort='descending'] { color: var(--fg); }
+
+  /* Filter: shown on both layouts, and only once its script has run. */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .controls[hidden] { display: none; }
+  .filter { flex: 1 1 16rem; display: flex; }
+  .filter input {
+    width: 100%;
+    font: inherit;
+    color: var(--fg);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+  }
+  .filter input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .count { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  .filter-error { flex-basis: 100%; margin: 0; color: var(--down); font-size: 0.78rem; }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 
   /* Shown only on the card layout, and only once the script that drives it has
      run — an inert select is worse than no select. */

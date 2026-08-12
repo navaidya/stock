@@ -88,11 +88,18 @@ be worse than no run.
   that is not committed did not happen.
 - **COL-14** `MUST` `test` — A run that produces no change to `data/market.json`
   completes successfully without creating an empty commit.
-- **COL-15** `MUST` `test` — The commit contains only `data/market.json`. Any
-  other file the job happened to modify is left uncommitted.
+- **COL-15** `MUST` `test` — Each commit contains only the file it was asked to
+  commit. Any other file the job happened to modify is left uncommitted. The
+  refresh job makes one such commit per output file — `data/market.json`, then
+  `data/brief.json` — rather than sweeping the worktree.
 - **COL-16** `MUST` `test` — If the collector produced no output file, the
   commit step fails loudly rather than reporting success. A green run that
   committed nothing is the failure mode this whole area is built to prevent.
+- **COL-20** `MUST` `test` — A file the run legitimately may not produce — the
+  brief, when no model key is configured — is committed with `--optional`, which
+  turns a missing file into a skip rather than a failure. The distinction
+  between "should exist and does not" (`COL-16`) and "may not exist" lives in
+  the flag, not in untested workflow YAML.
 - **COL-17** `MUST` `test` — The refresh workflow invokes the deploy workflow
   explicitly after pushing, and builds `main` rather than the calling run's
   SHA. It must not rely on the deploy workflow's `push` trigger: GitHub does

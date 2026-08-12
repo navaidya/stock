@@ -162,6 +162,42 @@ const referenceRows = Object.entries(reference).sort(([a], [b]) => a.localeCompa
     </article>
 
     <article>
+      <h3><span class="term">How filtering works</span></h3>
+      <p>
+        The box above the table takes comparisons and bare words, combined with
+        AND. <code>pe &lt; 25 yield &gt; 2</code> keeps companies that are both;
+        <code>earnings &lt;= 7</code> keeps the ones reporting within the week;
+        <code>off high &lt; -30 semiconductors</code> combines a number and a
+        sector. Field names are the short ones in each entry above, or the sort
+        key printed beneath it.
+      </p>
+      <p>
+        A row with no value for a field you filtered on never matches — asking
+        for a P/E under 25 excludes companies with no P/E rather than counting
+        an em dash as zero. If part of a query does not parse it is ignored and
+        said so, because a typo silently emptying the table looks exactly like
+        an honest answer of "nothing qualifies".
+      </p>
+    </article>
+
+    <article>
+      <h3><span class="term">The note at the top of the home page</span></h3>
+      <p>
+        When it appears, it is written by a language model, not by a person. It
+        runs once per collection in the same scheduled job that gathers the
+        data, is given only the table you can see, and is instructed to describe
+        what is in it — no recommendations, no price targets, no guesses about
+        why something moved. It carries the age of the data it describes.
+      </p>
+      <p>
+        It is a summary, not an oracle: it can misread its own input, and it
+        knows nothing that is not in the table. Where it and a number disagree,
+        the number is right. If no note appears, none was generated — the
+        dashboard works exactly the same without it.
+      </p>
+    </article>
+
+    <article>
       <h3><span class="term">How sorting works</span></h3>
       <p>
         Every column sorts, both ways. On a wide screen each header carries an up
