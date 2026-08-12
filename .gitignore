@@ -1,0 +1,15 @@
+node_modules/
+.astro/
+dist/
+.DS_Store
+
+# Never commit credentials. Real keys live in a local .env and in GitHub Actions
+# secrets; .env.example documents the required names with empty values.
+.env
+.env.*
+!.env.example
+.mcp.json
+
+# Per-machine Claude Code overrides. Shared config lives in .claude/settings.json
+# so cloud sessions inherit it; this file must not travel.
+.claude/settings.local.json
