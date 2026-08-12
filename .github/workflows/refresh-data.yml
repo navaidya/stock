@@ -37,3 +37,17 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           ./scripts/commit-data.sh
       - run: git push
+
+  # The push above is made with GITHUB_TOKEN, and GitHub does not trigger
+  # workflows from such a push — so deploy.yml's push trigger never fires for a
+  # data commit. Without this job the collector commits data that is never
+  # built, which looks exactly like a working pipeline (COL-17).
+  deploy:
+    needs: refresh
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      ref: main

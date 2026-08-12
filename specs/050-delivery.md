@@ -29,7 +29,7 @@ weakened to make a push succeed.
 - **DEL-7** `MUST` `manual` — A test is never weakened, skipped, or deleted to
   make a push succeed. If a test is wrong, the requirement it cites is wrong,
   and that is a spec change (see [README.md](README.md) §5).
-- **DEL-2** `MUST` `ci` — The deploy workflow runs `npm ci`, then `npm test`,
+- **DEL-2** `MUST` `test` — The deploy workflow runs `npm ci`, then `npm test`,
   then `npm run build`, then uploads `dist/` to Pages. A test failure blocks the
   deploy.
 - **DEL-8** `MUST` `build` — `npm run build` runs `astro check` before building

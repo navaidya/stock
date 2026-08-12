@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Invoked by the refresh workflow (COL-17). A push made with the default
+  # GITHUB_TOKEN does not trigger workflows, so the data commit cannot rely on
+  # the push trigger above — it has to call this workflow directly.
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build. Defaults to the triggering ref.
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -18,7 +28,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # When called by the refresh workflow, build the branch rather than the
+      # calling run's SHA — the data commit is newer than that SHA.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -81,6 +81,11 @@ be worse than no run.
 - **COL-16** `MUST` `test` — If the collector produced no output file, the
   commit step fails loudly rather than reporting success. A green run that
   committed nothing is the failure mode this whole area is built to prevent.
+- **COL-17** `MUST` `test` — The refresh workflow invokes the deploy workflow
+  explicitly after pushing, and builds `main` rather than the calling run's
+  SHA. It must not rely on the deploy workflow's `push` trigger: GitHub does
+  not trigger workflows from a push made with the default `GITHUB_TOKEN`, so
+  collected data would be committed and never built.
 
 ## Known gaps
 
