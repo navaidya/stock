@@ -73,6 +73,31 @@ specification — the arithmetic is the easy part.
   revenue and EPS growth, D/E, current ratio, EV/FCF, and FCF yield. Finnhub
   returns nonsense for these on a fund rather than omitting them.
 
+### Calendar and activity
+
+The two fields that answer "what should I look at today" rather than "what is
+this worth". Both are shaped by what the free tier will give: the earnings
+calendar is available, intraday volume is not.
+
+- **MOD-25** `MUST` `test` — `earningsDate` is the next scheduled report date as
+  an ISO `YYYY-MM-DD` string. A value that is not one is dropped.
+- **MOD-26** `MUST` `test` — Where the calendar carries several dates, the
+  soonest on or after the collection date is taken. A calendar holding only past
+  dates yields no earnings date rather than the most recent one.
+- **MOD-27** `MUST` `test` — `earningsHour` is normalized to `before open`,
+  `after close`, or `during hours`; any other value is dropped.
+- **MOD-28** `MUST` `test` — `daysToEarnings` is computed from `earningsDate`
+  against an explicit clock passed in, is `0` on the day itself, and is
+  `undefined` for a date already past. Nothing in `src/lib/` reads the clock
+  implicitly except `freshness`.
+- **MOD-29** `MUST` `test` — `volumeRatio10D3M` is the 10-day average daily
+  volume over the 3-month average, computed only when the 3-month average is
+  strictly positive.
+- **MOD-30** `MUST` `manual` — `volumeRatio10D3M` is a two-week trend against a
+  quarter baseline, and is never labelled or described as intraday relative
+  volume. The free tier has no intraday volume, and a ratio that looks like one
+  would be read as one.
+
 ### Hydration
 
 - **MOD-9** `MUST` `test` — A curated entry with no collected snapshot still

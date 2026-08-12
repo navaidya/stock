@@ -1,5 +1,17 @@
 import type { StockSnapshot } from './types.ts';
-import { EMPTY, marketCap, money, num, pct, signedPct, text, trend, usdMillions } from './format.ts';
+import {
+  EMPTY,
+  marketCap,
+  money,
+  num,
+  pct,
+  ratio,
+  signedPct,
+  text,
+  trend,
+  usdMillions,
+} from './format.ts';
+import { shortDate } from './dates.ts';
 import { ratingRank } from './rating.ts';
 
 /** Column definitions per page.
@@ -43,6 +55,37 @@ const creditRatingColumn: Column = {
   // Sorts by position on the scale, not alphabetically: ascending puts AAA
   // first and unrated names last.
   sort: (s) => ratingRank(s.creditRating),
+};
+
+/** The one thing on this dashboard that is known in advance. Everything else
+ *  describes what has already happened; this says when the next thing happens.
+ *  Shown as the date plus a countdown, because "24 Feb" needs a mental
+ *  subtraction and "3d" does not. */
+const earningsColumn: Column = {
+  key: 'earningsDate',
+  label: 'Earnings',
+  help: 'Next scheduled earnings date, with days remaining as of the last build',
+  align: 'left',
+  render: (s) => {
+    const date = shortDate(s.earningsDate);
+    if (!date) return EMPTY;
+    if (s.daysToEarnings === undefined) return date;
+    const away =
+      s.daysToEarnings === 0 ? 'today' : s.daysToEarnings === 1 ? 'tomorrow' : `${s.daysToEarnings}d`;
+    return `${date} · ${away}`;
+  },
+  // Sorts on the ISO date, where lexicographic order is chronological order.
+  sort: (s) => s.earningsDate,
+};
+
+/** Trading activity, two weeks against a quarter. Deliberately not called
+ *  "relative volume": that means today against average, which needs intraday
+ *  volume the free tier does not carry (MOD-30). */
+const volumeColumn: Column = {
+  key: 'volumeRatio10D3M',
+  label: 'Vol 10D/3M',
+  help: '10-day average daily volume over the 3-month average. Above 1 means the last two weeks have been busier than the quarter. Not intraday relative volume',
+  render: (s) => ratio(s.volumeRatio10D3M),
 };
 
 const rpoColumn: Column = {
@@ -94,6 +137,8 @@ const identity: Column[] = [
     label: 'Mkt cap',
     render: (s) => marketCap(s.marketCap),
   },
+  // Primary on every page: it is the one column that says when to look again.
+  { ...earningsColumn, primary: true },
 ];
 
 /** Home: a balanced view of quality, value, growth and health. */
@@ -182,6 +227,7 @@ export const homeColumns: Column[] = [
   },
   creditRatingColumn,
   rpoColumn,
+  volumeColumn,
   {
     key: 'dividendYield',
     label: 'Yield',
@@ -245,6 +291,7 @@ export const aiColumns: Column[] = [
   // The AI buildout is being financed with debt as much as with cash flow, so
   // who is investment grade and who is not is part of reading this page.
   creditRatingColumn,
+  volumeColumn,
 ];
 
 /** Dividends: yield alone is a trap — a high yield usually means the price

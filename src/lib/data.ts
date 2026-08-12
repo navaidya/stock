@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
+import { daysUntil } from './dates.ts';
 import { normalizeReference } from './reference.ts';
 import type {
   MarketData,
@@ -63,7 +64,15 @@ export function hydrate(
   entries: Array<WatchlistEntry | UniverseEntry>,
   market: MarketData,
   reference: Record<string, ReferenceEntry> = {},
+  now: number = Date.now(),
 ): StockSnapshot[] {
+  const countdown = (s: StockSnapshot): StockSnapshot => {
+    // Computed at build, not stored: "in 3 days" is only true on the day it was
+    // worked out, and this page is rebuilt every time data lands.
+    const days = daysUntil(s.earningsDate, now);
+    return days === undefined ? s : { ...s, daysToEarnings: days };
+  };
+
   return entries.map((entry) => {
     const collected = market.stocks[entry.ticker];
     const segment = 'segment' in entry ? entry.segment : undefined;
@@ -75,7 +84,13 @@ export function hydrate(
     if (!collected) {
       return { ticker: entry.ticker, name: entry.name, sector, segment, ...ref, errors: ['no data'] };
     }
-    return { ...ref, ...collected, name: entry.name, sector: sector ?? collected.sector, segment };
+    return countdown({
+      ...ref,
+      ...collected,
+      name: entry.name,
+      sector: sector ?? collected.sector,
+      segment,
+    });
   });
 }
 

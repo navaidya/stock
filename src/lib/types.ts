@@ -20,6 +20,20 @@ export interface StockSnapshot {
   marketCap?: number;
   beta?: number;
 
+  // Calendar and activity — what to look at today, rather than what it is worth
+  /** Next scheduled report date, `YYYY-MM-DD`. */
+  earningsDate?: string;
+  /** `before open`, `after close`, or `during hours`. */
+  earningsHour?: string;
+  /** Days from the render date to `earningsDate`; 0 on the day itself. */
+  daysToEarnings?: number;
+  /** Average daily volume over 10 days and 3 months, in millions of shares. */
+  avgVolume10D?: number;
+  avgVolume3M?: number;
+  /** 10-day average volume over the 3-month average. NOT intraday relative
+   *  volume, which the data source does not provide. */
+  volumeRatio10D3M?: number;
+
   // Valuation
   peTTM?: number;
   forwardPE?: number;

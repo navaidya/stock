@@ -1,5 +1,11 @@
 {
-  "quote": { "c": 182.45, "dp": 1.83, "h": 183.9, "l": 179.2, "pc": 179.17 },
+  "quote": {
+    "c": 182.45,
+    "dp": 1.83,
+    "h": 183.9,
+    "l": 179.2,
+    "pc": 179.17
+  },
   "profile": {
     "name": "NVIDIA Corp",
     "finnhubIndustry": "Semiconductors",
@@ -25,7 +31,31 @@
       "currentRatioQuarterly": 4.1,
       "dividendYieldIndicatedAnnual": 0.02,
       "payoutRatioTTM": 1.1,
-      "dividendGrowthRate5Y": 0.0
+      "dividendGrowthRate5Y": 0.0,
+      "10DayAverageTradingVolume": 265.4,
+      "3MonthAverageTradingVolume": 199.1
     }
+  },
+  "earnings": {
+    "earningsCalendar": [
+      {
+        "date": "2026-05-20",
+        "hour": "amc",
+        "quarter": 1,
+        "year": 2026
+      },
+      {
+        "date": "2026-02-25",
+        "hour": "amc",
+        "quarter": 4,
+        "year": 2025
+      },
+      {
+        "date": "2025-11-19",
+        "hour": "amc",
+        "quarter": 3,
+        "year": 2025
+      }
+    ]
   }
 }

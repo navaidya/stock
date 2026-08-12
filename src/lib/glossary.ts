@@ -92,6 +92,22 @@ export const glossary: Record<string, GlossaryEntry> = {
       'It is the equity only. A heavily indebted company is being bought for more than its market cap, which is what enterprise value counts instead.',
   },
 
+  earningsDate: {
+    term: 'Next scheduled earnings date',
+    group: 'Identity and price',
+    what: 'The date the company is next expected to report results, with the days remaining as of the last time this page was built. Where the schedule says so, it also notes whether the report lands before the open or after the close.',
+    why: 'The one thing on this dashboard that is known in advance. Every other column describes what has already happened; this says when the next thing happens — and most of what moves a position in a given quarter moves it on this date.',
+    watch:
+      'Dates are estimates until the company confirms them, and they move. The countdown was computed when the page was last built, so if the age stamp at the top says a day old, the countdown is a day stale too. An ETF has no earnings date, and a fund never will.',
+  },
+  volumeRatio10D3M: {
+    term: '10-day average volume over 3-month average volume',
+    group: 'Identity and price',
+    what: 'Average daily share volume over the last ten trading days, divided by the average over the last three months. 1.00× means the last two weeks traded at the quarter’s normal pace; 1.50× means half again as much.',
+    why: 'Attention, measured. Sustained heavy volume says something changed — a guidance revision, a contract, an index event — and it usually shows up here before it shows up in the fundamentals, which are quarterly.',
+    watch:
+      'This is not intraday relative volume. It cannot tell you that today is busy, only that the last two weeks have been, because the free data tier carries no intraday volume at all. It is also direction-blind: heavy volume accompanies falls as readily as rises, so this column says look, not which way.',
+  },
   peTTM: {
     term: 'Price / earnings, trailing twelve months',
     group: 'Valuation',

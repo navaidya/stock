@@ -1,3 +1,4 @@
+import { isoDate } from './dates.ts';
 import type { StockSnapshot } from './types.ts';
 
 /** Pure mapping from Finnhub's raw responses to our snapshot shape.
@@ -23,6 +24,60 @@ export interface FinnhubProfile {
 
 export interface FinnhubMetricResponse {
   metric?: Record<string, unknown>;
+}
+
+export interface FinnhubEarningsResponse {
+  earningsCalendar?: Array<{
+    date?: string;
+    hour?: string;
+    quarter?: number;
+    year?: number;
+  }>;
+}
+
+/** Milliseconds to wait after finishing one symbol, given how many calls that
+ *  symbol cost. The free tier allows 60 calls a minute, and the calls for a
+ *  symbol are issued in parallel — so the budget is spent per symbol, not per
+ *  request, and the gap has to cover all of them (COL-3). */
+export const MS_PER_CALL = 1100;
+
+export function symbolDelayMs(callsPerSymbol: number): number {
+  const calls = Number.isFinite(callsPerSymbol) && callsPerSymbol > 0 ? callsPerSymbol : 1;
+  return Math.ceil(calls) * MS_PER_CALL;
+}
+
+/** Finnhub's three codes for when in the trading day a company reports. Spelled
+ *  out because `bmo` on a dashboard is one more thing to look up. */
+const EARNINGS_HOURS: Record<string, string> = {
+  bmo: 'before open',
+  amc: 'after close',
+  dmh: 'during hours',
+};
+
+/** The next scheduled report on or after `today`, or the earliest future-dated
+ *  entry when no reference date is given. The calendar is queried with a
+ *  forward window, but a past date arriving anyway must not be shown as the
+ *  next one — "reports tomorrow" and "reported last month" are opposite
+ *  readings of the same cell (MOD-26). */
+export function nextEarnings(
+  earnings: FinnhubEarningsResponse | undefined,
+  today?: string,
+): { date?: string; hour?: string } {
+  // isoDate rather than a shape check: `2026-13-45` is the right shape and not
+  // a date, and a calendar entry that cannot be a day must not become one.
+  const from = isoDate(today);
+  const entries = (earnings?.earningsCalendar ?? [])
+    .map((e) => ({ ...e, date: isoDate(e?.date) }))
+    .filter((e): e is { date: string; hour?: string } => e.date !== undefined)
+    .filter((e) => (from ? e.date >= from : true))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const next = entries[0];
+  if (!next) return {};
+  return {
+    date: next.date,
+    hour: EARNINGS_HOURS[String(next.hour).toLowerCase()],
+  };
 }
 
 /** Coerce to a finite number, or undefined. Finnhub returns null, empty
@@ -58,6 +113,10 @@ export interface MapInput {
   quote?: FinnhubQuote;
   profile?: FinnhubProfile;
   metrics?: FinnhubMetricResponse;
+  earnings?: FinnhubEarningsResponse;
+  /** Collection date as `YYYY-MM-DD`. Passed in rather than read from a clock,
+   *  so the mapping stays pure and testable (MOD-7). */
+  today?: string;
 }
 
 export function mapToSnapshot(input: MapInput): StockSnapshot {
@@ -80,6 +139,18 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
   const fcfYield =
     pfcfShare !== undefined && pfcfShare > 0 ? (1 / pfcfShare) * 100 : undefined;
 
+  // Trading activity over the last two weeks against the last quarter. Not
+  // intraday relative volume — the free tier has no intraday volume at all, and
+  // this must never be presented as though it did (MOD-30).
+  const avgVolume10D = pick(m, '10DayAverageTradingVolume');
+  const avgVolume3M = pick(m, '3MonthAverageTradingVolume');
+  const volumeRatio10D3M =
+    avgVolume10D !== undefined && avgVolume3M !== undefined && avgVolume3M > 0
+      ? avgVolume10D / avgVolume3M
+      : undefined;
+
+  const earnings = nextEarnings(input.earnings, input.today);
+
   const snapshot: StockSnapshot = {
     ticker,
     name: input.name || profile?.name || ticker,
@@ -95,6 +166,12 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
     priceReturn52W: pick(m, '52WeekPriceReturnDaily'),
     marketCap: toNum(profile?.marketCapitalization),
     beta: pick(m, 'beta'),
+
+    avgVolume10D,
+    avgVolume3M,
+    volumeRatio10D3M,
+    earningsDate: earnings.date,
+    earningsHour: earnings.hour,
 
     peTTM: pick(m, 'peTTM', 'peBasicExclExtraTTM', 'peExclExtraTTM'),
     forwardPE: pick(m, 'forwardPE', 'peForward'),
@@ -136,6 +213,9 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
     delete snapshot.currentRatio;
     delete snapshot.evToFcf;
     delete snapshot.fcfYield;
+    // A fund does not report earnings. Its holdings do.
+    delete snapshot.earningsDate;
+    delete snapshot.earningsHour;
   }
 
   return snapshot;

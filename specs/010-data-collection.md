@@ -31,8 +31,20 @@ metric as normal rather than exceptional.
   schedule or manual dispatch. The deployed site never calls the API.
 - **COL-2** `MUST` `manual` — The collector reads `FINNHUB_API_KEY` from the
   environment. With no key it exits non-zero and writes nothing.
-- **COL-3** `MUST` `manual` — Requests are paced at least 1000ms apart to stay
-  within the free tier's 60 calls/minute, given three calls per symbol.
+- **COL-3** `MUST` `test` — The collector paces itself to no more than 60 API
+  calls per minute: it sleeps at least 1000ms **per call it makes for a symbol**
+  before starting the next one. Pacing per symbol rather than per request is the
+  correction to an earlier reading of this requirement — the calls for one
+  symbol are issued in parallel, so a flat 1100ms gap between symbols was three
+  calls per 1.1s, nearly three times the limit.
+- **COL-18** `MUST` `manual` — The next earnings date comes from the earnings
+  calendar endpoint, queried per symbol over a forward window that starts on the
+  collection date, so a past report is never returned as the next one.
+- **COL-19** `MUST` `manual` — A failure of the earnings calendar call alone
+  degrades to no earnings date for that symbol. It must not fail the symbol:
+  the calendar is the one endpoint here that free-tier access has historically
+  been withdrawn from, and losing it must not blank a row's price and
+  fundamentals.
 - **COL-9** `SHOULD` `ci` — The schedule is weekdays at 14:35, 18:35 and 21:15
   UTC: twice during US market hours and once after the close.
 
@@ -93,8 +105,14 @@ be worse than no run.
 repository, so every scheduled run exits 1. This requires a manual step outside
 the repo and cannot be fixed by a commit.
 
-**`COL-3`, `COL-4`, `COL-5` and `COL-11` are unverified.** The collector's
-pacing and retention logic has no test coverage, because `scripts/collect.mjs`
-performs its own I/O and network calls at module scope. Promoting these to
-`test` requires extracting the run loop into an injectable function — a fetcher
-and a clock passed in — which is the natural next refactor for this area.
+**`COL-4`, `COL-5` and `COL-11` are unverified.** The collector's retention
+logic has no test coverage, because `scripts/collect.mjs` performs its own I/O
+and network calls at module scope. Promoting these to `test` requires extracting
+the run loop into an injectable function — a fetcher and a clock passed in —
+which is the natural next refactor for this area.
+
+`COL-3` was in that list until the pacing arithmetic moved into
+`symbolDelayMs()` in `src/lib/finnhub.ts`, where it is unit-tested. The rest of
+the loop still is not, and `COL-18` and `COL-19` join it: that a failing
+calendar call degrades rather than failing the symbol is asserted by reading the
+code.

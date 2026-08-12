@@ -11,7 +11,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import { mapToSnapshot } from '../src/lib/finnhub.ts';
+import { mapToSnapshot, symbolDelayMs } from '../src/lib/finnhub.ts';
+import { todayISO } from '../src/lib/dates.ts';
 
 const ROOT = process.cwd();
 const DATA = join(ROOT, 'data');
@@ -25,8 +26,11 @@ if (!KEY) {
   process.exit(1);
 }
 
-// Free tier allows 60 calls/minute. Three calls per symbol plus headroom.
-const DELAY_MS = 1100;
+// Free tier allows 60 calls/minute. The calls for one symbol go out in
+// parallel, so the wait afterwards has to cover all of them — a flat gap
+// between symbols would spend the budget several times over (COL-3).
+const CALLS_PER_SYMBOL = 4;
+const DELAY_MS = symbolDelayMs(CALLS_PER_SYMBOL);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function get(path, params) {
@@ -69,13 +73,34 @@ function loadPrevious() {
   }
 }
 
-async function collectOne(entry) {
-  const [quote, profile, metrics] = await Promise.all([
+// Far enough ahead to catch the next report for any symbol, since a quarter is
+// about 90 days and dates are confirmed only a few weeks out.
+const EARNINGS_WINDOW_DAYS = 120;
+
+/** The earnings calendar, over a forward window from today (COL-18).
+ *
+ *  Failure here is swallowed on purpose (COL-19). This is the endpoint most
+ *  likely to be withdrawn from the free tier, and an earnings date is worth
+ *  much less than the price and fundamentals that would be lost with it if one
+ *  403 failed the whole symbol. */
+async function collectEarnings(ticker, today) {
+  const to = todayISO(Date.parse(`${today}T00:00:00Z`) + EARNINGS_WINDOW_DAYS * 86_400_000);
+  try {
+    return await get('/calendar/earnings', { symbol: ticker, from: today, to });
+  } catch (err) {
+    console.warn(`\n  ${ticker}: no earnings calendar (${err.message})`);
+    return undefined;
+  }
+}
+
+async function collectOne(entry, today) {
+  const [quote, profile, metrics, earnings] = await Promise.all([
     get('/quote', { symbol: entry.ticker }),
     get('/stock/profile2', { symbol: entry.ticker }),
     get('/stock/metric', { symbol: entry.ticker, metric: 'all' }),
+    collectEarnings(entry.ticker, today),
   ]);
-  return mapToSnapshot({ ...entry, quote, profile, metrics });
+  return mapToSnapshot({ ...entry, quote, profile, metrics, earnings, today });
 }
 
 async function main() {
@@ -84,11 +109,12 @@ async function main() {
   const stocks = {};
   const failed = [];
 
-  console.log(`Collecting ${entries.length} symbols...`);
+  const today = todayISO(Date.now());
+  console.log(`Collecting ${entries.length} symbols at ${DELAY_MS}ms per symbol...`);
 
   for (const entry of entries) {
     try {
-      stocks[entry.ticker] = await collectOne(entry);
+      stocks[entry.ticker] = await collectOne(entry, today);
       process.stdout.write('.');
     } catch (err) {
       failed.push(entry.ticker);

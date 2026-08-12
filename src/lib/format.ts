@@ -37,6 +37,13 @@ export function text(v: string | undefined): string {
   return typeof v === 'string' && v.trim() !== '' ? v : EMPTY;
 }
 
+/** A multiple of a baseline: `1.42×`. Distinct from a percentage on purpose —
+ *  1.42× and 42% are the same fact stated two ways, and mixing them in one
+ *  table is how a reader ends up off by a factor of a hundred. */
+export function ratio(v: number | undefined, digits = 2): string {
+  return isNum(v) ? `${v.toFixed(digits)}×` : EMPTY;
+}
+
 /** Sign class for colouring deltas. Never returns a colour for undefined, so a
  *  missing value is not mistaken for flat. */
 export function trend(v: number | undefined): 'up' | 'down' | 'flat' | 'none' {

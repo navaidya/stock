@@ -97,6 +97,18 @@ misleads.
   often it refreshes, what an em dash means, that hand-curated reference values
   carry an as-of date, and that nothing on the site is advice (`SYS-5`).
 
+### Daily-read columns
+
+Most columns answer "what is this worth", which changes slowly. These two answer
+"what should I look at today", and earn their place on that basis alone.
+
+- **UI-32** `MUST` `manual` — The next earnings date is a primary column on the
+  home page, showing the date and the days remaining. It is the single event
+  most likely to move a position this week, and it is knowable in advance.
+- **UI-33** `MUST` `manual` — The volume column is labelled as a 10-day average
+  against a 3-month average, and the FAQ says plainly that it is not intraday
+  relative volume (`MOD-30`).
+
 ### Responsive behaviour
 
 - **UI-3** `MUST` `manual` — Below 768px the card layout is shown and the table
