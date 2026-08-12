@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
-    "test": "vitest run",
+    "test": "npm run spec:check && vitest run",
     "test:watch": "vitest",
+    "spec:check": "node scripts/check-specs.mjs",
     "collect": "node --experimental-strip-types scripts/collect.mjs"
   },
   "dependencies": {

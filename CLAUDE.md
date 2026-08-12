@@ -6,6 +6,31 @@ A personal live-updating dashboard for stock analysis. Static-first: Astro,
 TypeScript, and JSON data files, deployed to GitHub Pages. Same architecture as
 the `learning` repo — no backend, no database, no server-side API.
 
+## This project is spec-driven — read the spec first
+
+`specs/` is the source of truth for behaviour. **Start there, not in the source
+files.** `specs/SPEC.md` is the master spec: scope, non-goals, system-wide
+invariants, the child spec index, and a live table of known gaps.
+`specs/README.md` is the process.
+
+The rules that matter for any change:
+
+- **Spec first.** A behaviour change starts by writing or editing a requirement,
+  then a test citing its ID, then the implementation. Commit all three together.
+- **Requirement IDs are permanent** (`MOD-4`, `COL-6`, …). Never renumber or
+  reuse one. Withdraw in place; do not delete.
+- **`npm run spec:check` is a build gate**, and runs as part of `npm test`. It
+  fails if a `MUST` requirement tagged `test` has no test citing its ID, if a
+  test cites an ID no spec defines, or if an ID is defined twice.
+- **Never weaken a requirement to make the gate pass.** That is the same failure
+  as weakening a test to make a push succeed. If the spec is wrong, change it
+  deliberately and say so.
+- **Update the conformance table** in `specs/SPEC.md` in the same commit that
+  opens or closes a gap.
+
+The rest of this file is context and constraint. Where it and a spec overlap,
+the spec carries the requirement ID and the testable wording.
+
 ## How "live" data works
 
 Data is refreshed by a **scheduled GitHub Actions collector**, not by a running
