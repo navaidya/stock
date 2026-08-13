@@ -25,6 +25,13 @@ export function loadUniverse(): { segments: Record<string, string>; universe: Un
   return { segments: raw?.segments ?? {}, universe: raw?.universe ?? [] };
 }
 
+/** The full S&P 500 constituent list for the /sp500 screening page. Public
+ *  index membership, not a personal list — see data/sp500.yaml's header. */
+export function loadSp500(): WatchlistEntry[] {
+  const raw = parse(readFileSync(join(DATA, 'sp500.yaml'), 'utf8'));
+  return raw?.sp500 ?? [];
+}
+
 /** Hand-curated values the API does not carry — credit ratings, RPO. Optional
  *  in the same way market.json is: absent or malformed yields an empty map and
  *  the columns render as em dashes. */
@@ -53,9 +60,12 @@ export function loadBrief(): StoredBrief | undefined {
 
 /** Collected market data. Missing entirely on a fresh clone before the
  *  collector has ever run, so the site must build without it — otherwise the
- *  first deploy fails and nobody can see the dashboard at all. */
-export function loadMarketData(): MarketData {
-  const path = join(DATA, 'market.json');
+ *  first deploy fails and nobody can see the dashboard at all.
+ *
+ *  `file` selects the collection target — `market.json` (default) or
+ *  `sp500.json`, written by the matching `scripts/collect.mjs` target. */
+export function loadMarketData(file: string = 'market.json'): MarketData {
+  const path = join(DATA, file);
   if (!existsSync(path)) {
     return { generatedAt: '', failed: [], stocks: {} };
   }

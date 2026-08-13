@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import StockTable from '../components/StockTable.astro';
+import { sp500Columns } from '../lib/columns.ts';
+import { hydrate, loadMarketData, loadReference, loadSp500 } from '../lib/data.ts';
+
+const market = loadMarketData('sp500.json');
+const stocks = hydrate(loadSp500(), market, loadReference());
+---
+
+<Base
+  title="S&P 500"
+  subtitle="All current S&P 500 constituents, same columns as My stocks — a screen of the whole index, not a recommendation list. Collecting ~500 symbols takes far longer than the watchlist, so this page refreshes on its own slower schedule; check the age badge above."
+  generatedAt={market.generatedAt}
+>
+  <StockTable columns={sp500Columns} stocks={stocks} />
+</Base>

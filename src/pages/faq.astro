@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { aiColumns, dividendColumns, homeColumns } from '../lib/columns.ts';
+import { aiColumns, dividendColumns, homeColumns, sp500Columns } from '../lib/columns.ts';
 import { GROUPS, glossary } from '../lib/glossary.ts';
 import { loadMarketData, loadReference } from '../lib/data.ts';
 import { usdMillions } from '../lib/format.ts';
@@ -15,6 +15,7 @@ const pages: Array<{ label: string; href: string; columns: typeof homeColumns }>
   { label: 'My stocks', href: '/', columns: homeColumns },
   { label: 'AI', href: '/ai', columns: aiColumns },
   { label: 'Dividends', href: '/dividends', columns: dividendColumns },
+  { label: 'S&P 500', href: '/sp500', columns: sp500Columns },
 ];
 
 const usedOn = new Map<string, string[]>();

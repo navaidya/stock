@@ -29,8 +29,8 @@ not answer "what should I buy."
 - Scheduled collection of public market data into a committed JSON file.
 - Hand-curated public reference data the API does not carry — issuer credit
   ratings, remaining performance obligation — each value dated at its source.
-- Three static views over that data: watchlist, AI-exposure, dividends, plus a
-  glossary page explaining every column.
+- Four static views over that data: watchlist, AI-exposure, dividends, and an
+  S&P 500 screen, plus a glossary page explaining every column.
 - Client-side sorting and filtering of any column on any view.
 - A short machine-written brief over each collection, generated outside the
   browser — in CI, or locally by the owner.
@@ -85,7 +85,16 @@ data/reference.yaml ─┤    data/brief.json
               src/lib/data.ts ──> Astro build ──> dist/ ──> GitHub Pages
                                         ^
               src/lib/columns.ts, format.ts, sort.ts, rating.ts (pure)
+
+data/sp500.yaml ──(1) separate daily GitHub Action──> scripts/collect.mjs sp500
+                                                              │
+                                                              v
+                                                       data/sp500.json ──> (as above)
 ```
+
+The S&P 500 target shares the collector script and every pure module above; it
+differs only in its ticker set, its output file, and its slower schedule
+(`COL-21`, `COL-22`) — see `010-data-collection.md`.
 
 Three boundaries matter:
 
@@ -154,6 +163,7 @@ empty list is the goal, not the assumption.
 | **Hydration** | Merging a curated entry with its collected snapshot for rendering. A curated entry with no snapshot still produces a row. |
 | **Primary column** | A column that stays visible on a phone without expanding the card. |
 | **Reference value** | A hand-curated public fact the API does not carry — a credit rating, an RPO figure — dated at its source in `data/reference.yaml`. |
+| **S&P 500 screen** | The `/sp500` page: all current index constituents (`data/sp500.yaml`), same columns as the home page, refreshed on its own slower schedule (`COL-22`). A screen of the index, not a recommendation list. |
 | **RPO** | Remaining performance obligation: contracted revenue not yet recognised. A backlog figure, disclosed quarterly in the filings. |
 | **Brief** | The machine-written summary of one collection, in `data/brief.json`. Describes the data; never advises. |
 | **Financial Health score** | A 0–100 composite of profitability and balance-sheet stability only — see `src/lib/health.ts` and `020-data-model.md` `MOD-31`..`MOD-33`. The one exception to the no-composite-scores rule; never a ranking, never advice. |

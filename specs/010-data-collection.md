@@ -7,7 +7,9 @@ when that goes wrong.
 
 **Implementation:** [scripts/collect.mjs](../scripts/collect.mjs),
 [scripts/commit-data.sh](../scripts/commit-data.sh),
-[.github/workflows/refresh-data.yml](../.github/workflows/refresh-data.yml)
+[.github/workflows/refresh-data.yml](../.github/workflows/refresh-data.yml),
+[.github/workflows/refresh-sp500.yml](../.github/workflows/refresh-sp500.yml),
+[data/sp500.yaml](../data/sp500.yaml)
 
 ---
 
@@ -58,6 +60,27 @@ metric as normal rather than exceptional.
   same file's `segments` map.
 - **COL-10** `MUST` `manual` — An entry with `sector: etf` is marked `isEtf` so
   the data model can strip metrics that do not apply to a fund (see `MOD-6`).
+
+### S&P 500 target
+
+A second, much larger ticker set for the `/sp500` screening page. It reuses
+every part of the pipeline above — the same fetch, pacing, coercion and
+failure semantics — rather than duplicating them, because the risk with a
+second collector is drift between the two, not extra code.
+
+- **COL-21** `MUST` `manual` — `node scripts/collect.mjs sp500` collects
+  `data/sp500.yaml` (all current S&P 500 constituents) into `data/sp500.json`,
+  sharing `symbolDelayMs` pacing, `mapToSnapshot` coercion, and the per-symbol
+  failure handling with the default target. `scripts/collect.mjs` remains the
+  only file that touches the network for either target.
+- **COL-22** `MUST` `manual` — The S&P 500 target refreshes on its own
+  schedule (`refresh-sp500.yml`), separate from `refresh-data.yml`, because
+  roughly 500 symbols takes on the order of 35-40 minutes at the free-tier
+  pace (`COL-3`) — folding it into the three-times-daily refresh would
+  stretch every scheduled run to match its slowest target.
+- **COL-23** `MUST` `test` — `data/sp500.yaml` parses, is non-empty, and
+  contains no duplicate tickers, mirroring `COL-8` for the third curated
+  list.
 
 ### Failure semantics
 

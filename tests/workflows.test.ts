@@ -13,6 +13,7 @@ const workflow = (name: string) =>
   parse(readFileSync(join(process.cwd(), '.github/workflows', name), 'utf8'));
 
 const refresh = workflow('refresh-data.yml');
+const refreshSp500 = workflow('refresh-sp500.yml');
 const deploy = workflow('deploy.yml');
 
 describe('refresh-data workflow', () => {
@@ -42,6 +43,37 @@ describe('refresh-data workflow', () => {
     expect(steps.some((run: string) => run.includes('scripts/commit-data.sh'))).toBe(true);
     // The original bug, kept out by name: it ran cleanly and committed nothing.
     expect(steps.some((run: string) => run.includes('commit -am'))).toBe(false);
+  });
+});
+
+describe('refresh-sp500 workflow', () => {
+  it('[COL-22] runs on its own separate schedule from refresh-data', () => {
+    const crons = (spec: any) =>
+      (Array.isArray(spec.on.schedule) ? spec.on.schedule : []).map((s: { cron: string }) => s.cron);
+    const dataCrons = crons(refresh);
+    const sp500Crons = crons(refreshSp500);
+    expect(sp500Crons.length).toBeGreaterThan(0);
+    for (const c of sp500Crons) expect(dataCrons).not.toContain(c);
+  });
+
+  it('[COL-21] collects the sp500 target', () => {
+    const steps = refreshSp500.jobs.refresh.steps.map((s: { run?: string }) => s.run ?? '');
+    expect(steps.some((run: string) => run.includes('npm run collect:sp500'))).toBe(true);
+  });
+
+  it('[COL-6, COL-15] commits only data/sp500.json, through the tested script', () => {
+    const steps = refreshSp500.jobs.refresh.steps.map((s: { run?: string }) => s.run ?? '');
+    expect(steps.some((run: string) => run.includes('scripts/commit-data.sh data/sp500.json'))).toBe(
+      true,
+    );
+  });
+
+  it('[COL-17] calls the deploy workflow rather than relying on the push trigger', () => {
+    const deployJob = refreshSp500.jobs.deploy;
+    expect(deployJob).toBeDefined();
+    expect(deployJob.uses).toBe('./.github/workflows/deploy.yml');
+    expect(deployJob.needs).toBe('refresh');
+    expect(deployJob.with.ref).toBe('main');
   });
 });
 

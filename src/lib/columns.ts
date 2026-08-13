@@ -245,6 +245,13 @@ export const homeColumns: Column[] = [
   },
 ];
 
+/** S&P 500: the same balanced view as Home, at index scope. Deliberately the
+ *  same array rather than a parallel definition — this page answers the exact
+ *  same question ("how do these look right now") over a wider set, not a
+ *  different one, so a second column set would only be a copy to keep in
+ *  sync (UI-10). */
+export const sp500Columns: Column[] = homeColumns;
+
 /** AI: these names are often high-multiple or pre-profit, so valuation leans on
  *  sales multiples and the emphasis moves to growth and volatility. */
 export const aiColumns: Column[] = [

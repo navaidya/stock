@@ -16,8 +16,14 @@ import { todayISO } from '../src/lib/dates.ts';
 
 const ROOT = process.cwd();
 const DATA = join(ROOT, 'data');
-const OUT = join(DATA, 'market.json');
 const API = 'https://finnhub.io/api/v1';
+
+// A second collection target reusing the same fetch/pace/coerce pipeline
+// (COL-21): `npm run collect:sp500` passes `sp500` here. Kept as one script
+// rather than two so there is still exactly one file that touches the
+// network (SYS-1 architecture boundary).
+const TARGET = process.argv[2] === 'sp500' ? 'sp500' : 'default';
+const OUT = join(DATA, TARGET === 'sp500' ? 'sp500.json' : 'market.json');
 
 const KEY = process.env.FINNHUB_API_KEY;
 if (!KEY) {
@@ -45,6 +51,12 @@ async function get(path, params) {
 }
 
 function readTickers() {
+  if (TARGET === 'sp500') {
+    const sp500 = parse(readFileSync(join(DATA, 'sp500.yaml'), 'utf8'))?.sp500 ?? [];
+    // Every current index constituent is a company, not a fund.
+    return sp500.map((e) => ({ ticker: e.ticker, name: e.name, sector: e.sector, isEtf: false }));
+  }
+
   const watchlist = parse(readFileSync(join(DATA, 'watchlist.yaml'), 'utf8'))?.watchlist ?? [];
   const universe = parse(readFileSync(join(DATA, 'ai-universe.yaml'), 'utf8'))?.universe ?? [];
 

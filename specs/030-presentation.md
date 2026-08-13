@@ -41,8 +41,9 @@ misleads.
 
 ### Pages
 
-- **UI-1** `MUST` `build` — Four static pages: `/` (watchlist), `/ai` (AI
-  exposure), `/dividends`, `/faq`. All are prerendered; none fetches at runtime.
+- **UI-1** `MUST` `build` — Five static pages: `/` (watchlist), `/ai` (AI
+  exposure), `/dividends`, `/sp500` (S&P 500 screen), `/faq`. All are
+  prerendered; none fetches at runtime.
 - **UI-2** `MUST` `build` — Every page builds and renders with no
   `data/market.json` present, showing rows with empty metrics (see `MOD-15`).
 - **UI-8** `MUST` `build` — Every page displays the data's age, derived from
@@ -55,7 +56,9 @@ misleads.
   balanced value/growth/quality/health view; AI leads on revenue growth, gross
   margin and sales multiples because those names are often high-multiple or
   pre-profit; dividends leads on payout ratio and FCF yield because yield alone
-  is a trap — a high yield usually means the price fell for a reason.
+  is a trap — a high yield usually means the price fell for a reason. S&P 500
+  reuses Home's column set exactly, since it asks the identical question ("how
+  do these look right now") at index scope rather than a different one.
 - **UI-11** `MUST` `manual` — Every column marked `primary` must be meaningful
   without its neighbours, since primary columns are read alone on a phone.
 - **UI-12** `SHOULD` `manual` — A column whose meaning is not obvious from its
@@ -184,6 +187,13 @@ Most columns answer "what is this worth", which changes slowly. These two answer
   storage, networking, power, cooling. A segment with no rows is omitted.
 - **UI-19** `MUST` `manual` — The AI page states that it is a classification of
   business exposure, not a recommendation list.
+- **UI-49** `MUST` `manual` — The S&P 500 page states plainly that it is a
+  screen of the whole index, not a recommendation list, and that it refreshes
+  on a slower schedule than the other pages (`COL-22`) — the age badge is the
+  one source of truth for how current it is.
+- **UI-50** `MUST` `build` — The prerendered row order on `/sp500` is
+  alphabetical by ticker, matching `data/sp500.yaml`'s file order, so the page
+  is meaningful before any sort control runs (`UI-27`).
 
 ### Editorial constraints
 

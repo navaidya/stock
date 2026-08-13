@@ -1,0 +1,48 @@
+name: Refresh S&P 500 data
+
+on:
+  schedule:
+    # Once a day. ~500 symbols at the free-tier pace take on the order of
+    # 35-40 minutes (COL-3), so this runs far less often than the watchlist
+    # refresh rather than joining it and stretching every scheduled run.
+    - cron: '0 11 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-sp500
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run collect:sp500
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          ./scripts/commit-data.sh data/sp500.json 'chore: refresh S&P 500 data'
+      - run: git push
+
+  # Same reasoning as refresh-data.yml's deploy job (COL-17): a push made with
+  # GITHUB_TOKEN does not trigger deploy.yml's own push trigger, so it has to
+  # be called explicitly or the commit here is never built.
+  deploy:
+    needs: refresh
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      ref: main

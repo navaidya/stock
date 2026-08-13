@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { freshness, hydrate, loadUniverse, loadWatchlist } from '../src/lib/data.ts';
+import { freshness, hydrate, loadSp500, loadUniverse, loadWatchlist } from '../src/lib/data.ts';
 import { payingDividend } from '../src/lib/columns.ts';
 import type { MarketData } from '../src/lib/types.ts';
 
@@ -28,6 +28,34 @@ describe('watchlist and universe data files', () => {
   it('[SEC-1] carry no position data, since the repository is public', () => {
     const banned = ['shares', 'quantity', 'costBasis', 'cost_basis', 'avgPrice', 'pnl'];
     for (const entry of loadWatchlist() as unknown as Record<string, unknown>[]) {
+      for (const key of banned) expect(entry[key]).toBeUndefined();
+    }
+  });
+});
+
+describe('S&P 500 constituent list', () => {
+  it('[COL-23] parses, is non-empty, and has no duplicate tickers', () => {
+    const sp500 = loadSp500();
+    expect(sp500.length).toBeGreaterThan(400);
+    const tickers = sp500.map((e) => e.ticker);
+    expect(new Set(tickers).size).toBe(tickers.length);
+  });
+
+  it('[COL-23] every entry has a ticker and a name', () => {
+    for (const entry of loadSp500()) {
+      expect(entry.ticker, 'missing ticker').toBeTruthy();
+      expect(entry.name, `${entry.ticker} missing name`).toBeTruthy();
+    }
+  });
+
+  it('[UI-50] is sorted alphabetically by ticker, so the prerendered order is meaningful', () => {
+    const tickers = loadSp500().map((e) => e.ticker);
+    expect(tickers).toEqual([...tickers].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it('[SEC-1] carries no position data, since the repository is public', () => {
+    const banned = ['shares', 'quantity', 'costBasis', 'cost_basis', 'avgPrice', 'pnl'];
+    for (const entry of loadSp500() as unknown as Record<string, unknown>[]) {
       for (const key of banned) expect(entry[key]).toBeUndefined();
     }
   });
