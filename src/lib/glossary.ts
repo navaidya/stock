@@ -47,7 +47,7 @@ export const glossary: Record<string, GlossaryEntry> = {
     term: 'Ticker symbol',
     group: 'Identity and price',
     what: 'The symbol the company trades under on its listed exchange.',
-    why: 'The key everything else on the row is collected against.',
+    why: 'The key everything else on the row is collected against — and a link out to that symbol on Yahoo Finance, which has the news, filings, charts and intraday data this dashboard deliberately does not.',
     watch:
       'ADRs — TSM, ASML — are receipts for shares listed elsewhere. Their figures are converted, and their local listing can move overnight while the ADR is closed.',
   },

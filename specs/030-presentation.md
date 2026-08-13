@@ -127,6 +127,20 @@ Most columns answer "what is this worth", which changes slowly. These two answer
   against a 3-month average, and the FAQ says plainly that it is not intraday
   relative volume (`MOD-30`).
 
+### Leaving the dashboard
+
+- **UI-42** `MUST` `test` — Every ticker links to an external quote page for that
+  symbol. The symbol is mapped to the destination's convention rather than
+  pasted in — a class share written `BRK.B` here is `BRK-B` there, and a link
+  that 404s is worse than no link.
+- **UI-43** `MUST` `manual` — The link opens in a new tab with
+  `rel="noopener noreferrer"`, is visually distinguishable from plain text, and
+  on the card layout does not also toggle the card open.
+- **UI-44** `MUST` `manual` — The destination is stated, not disguised. This
+  dashboard is a screen, not a terminal: it deliberately holds no news, filings,
+  charts or intraday data, and the link is the acknowledgement of that boundary
+  rather than an attempt to paper over it.
+
 ### Responsive behaviour
 
 - **UI-3** `MUST` `manual` — Below 768px the card layout is shown and the table
@@ -184,7 +198,6 @@ Most columns answer "what is this worth", which changes slowly. These two answer
 
 ## Known gaps
 
-**`UI-20` is currently violated in copy.** The home page subtitle reads "Tracked
-positions and watchlist." Nothing renders position data — the page is safe — but
-the wording implies the list is a portfolio, which is precisely the inference
-`SEC-4` is meant to prevent.
+None open. `UI-20` was violated in copy — the home page subtitle read "Tracked
+positions and watchlist", implying a portfolio the page does not and must not
+contain. The subtitle now says what the list actually is.

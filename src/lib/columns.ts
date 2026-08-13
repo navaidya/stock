@@ -12,6 +12,7 @@ import {
   usdMillions,
 } from './format.ts';
 import { shortDate } from './dates.ts';
+import { QUOTE_PROVIDER, quoteUrl } from './links.ts';
 import { ratingRank } from './rating.ts';
 
 /** Column definitions per page.
@@ -39,6 +40,9 @@ export interface Column {
   /** Orderable value, where it differs from the field named by `key`. A credit
    *  rating displays as `AA-` and orders by its position on the scale. */
   sort?: (s: StockSnapshot) => number | string | undefined;
+  /** Makes the cell an external link. Returning undefined renders plain text,
+   *  so a row with an unusable symbol simply has no link. */
+  href?: (s: StockSnapshot) => string | undefined;
   trend?: (s: StockSnapshot) => ReturnType<typeof trend>;
   align?: 'left' | 'right';
 }
@@ -99,9 +103,11 @@ const identity: Column[] = [
   {
     key: 'ticker',
     label: 'Ticker',
+    help: `Opens this symbol on ${QUOTE_PROVIDER} — news, filings and intraday, none of which live here`,
     primary: true,
     align: 'left',
     render: (s) => s.ticker,
+    href: (s) => quoteUrl(s.ticker),
   },
   {
     key: 'price',

@@ -162,6 +162,22 @@ const referenceRows = Object.entries(reference).sort(([a], [b]) => a.localeCompa
     </article>
 
     <article>
+      <h3><span class="term">Why every ticker is a link</span></h3>
+      <p>
+        This is a screen, not a terminal. It holds no news, no filings, no
+        charts and no intraday prices — those need a backend, which is out of
+        scope by design, not merely unbuilt. So when the answer to "why did this
+        move" is not on the page, the ticker takes you to the full quote page on
+        Yahoo Finance in a new tab.
+      </p>
+      <p>
+        The symbol is translated on the way out where the two spellings differ —
+        a class share written <code>BRK.B</code> here is <code>BRK-B</code>
+        there — because a link that lands on a 404 is worse than no link.
+      </p>
+    </article>
+
+    <article>
       <h3><span class="term">How filtering works</span></h3>
       <p>
         The box above the table takes comparisons and bare words, combined with

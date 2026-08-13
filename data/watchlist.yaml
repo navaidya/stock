@@ -1,8 +1,13 @@
-# Home page watchlist.
+# Home page ticker list — a DEMO SET, not anybody's portfolio.
+#
+# Confirmed by the repository owner. Kept generic on purpose: this repo is
+# public, and the set of tickers a named person follows is itself personal
+# information even though no individual ticker is secret (SEC-4). A real list
+# belongs in watchlist.local.yaml, which .gitignore already reserves.
 #
 # PUBLIC REPO: tickers only. Never add share counts, cost basis, purchase
 # dates, or P&L to this file — see the "This repository is PUBLIC" section in
-# CLAUDE.md. Personal position data belongs in a gitignored local file.
+# CLAUDE.md.
 
 watchlist:
   - ticker: ORCL
@@ -41,14 +46,14 @@ watchlist:
   - ticker: CRWV
     name: CoreWeave
     sector: technology
-    # UNCONFIRMED: transcribed as "CoreView". Assumed CoreWeave (CRWV), the AI
-    # cloud provider. CoreView is a different, privately held SaaS company.
+    # Transcribed as "CoreView"; read as CoreWeave (CRWV), the AI cloud
+    # provider. CoreView is a different, privately held SaaS company.
   - ticker: ANET
     name: Arista Networks
     sector: networking
     # Transcription contained both "avista network" and "Ariesta Network".
-    # Treated as one entry. If "Avista Corp" (AVA, the utility) was meant as a
-    # separate holding, add it explicitly.
+    # Treated as one entry — Arista, the networking company, not Avista Corp
+    # (AVA, the utility).
   - ticker: NFLX
     name: Netflix
     sector: communication services

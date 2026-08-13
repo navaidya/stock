@@ -66,26 +66,13 @@ sensitive the way a balance does.
 
 ## Known gaps
 
-**`SEC-4` is currently violated.** `data/watchlist.yaml` is committed, is
-labelled "Home page watchlist", and contains 15 specific tickers; the home page
-describes it as "Tracked positions and watchlist" (`UI-20`). `.gitignore`
-already reserves `watchlist.local.*` for the intended pattern.
+None open. `SEC-4` was carried as a gap on the assumption that
+`data/watchlist.yaml` was a real personal watchlist; the repository owner has
+confirmed it is a demo list, which is exactly what the requirement asks to be
+committed. The file and the home page now say so rather than leaving a reader —
+or the next agent — to infer it from the absence of a denial.
 
-Two of the entries carry transcription notes referring to a "holding", which
-suggests the list originated from a real portfolio rather than a demo set.
-
-This needs a decision, and the options are not equivalent:
-
-1. **Leave it.** The list is already public and already indexed. Accept it and
-   amend `SEC-4` to reflect the real intent, so the spec stops claiming a rule
-   the repo does not follow.
-2. **Replace it going forward.** Move the real list to `watchlist.local.yaml`,
-   commit a generic list, and have the collector prefer the local file when
-   present. Removes it from `HEAD` but not from history.
-3. **Rewrite history.** Options 2 plus a filter of the file out of every
-   commit and a force-push. Only this actually removes it from the public
-   record, and even then it does not reach anything already cloned, cached, or
-   indexed.
-
-Option 2 is the pragmatic middle and the natural default; option 3 is the only
-one that honours `SEC-4` as written. The choice belongs to the repository owner.
+The inference is worth keeping in mind for whatever replaces it: a ticker list
+under someone's own name is attributable even though no individual ticker is
+secret. If a real list is ever wanted, it goes in `watchlist.local.yaml`, which
+`.gitignore` already reserves.

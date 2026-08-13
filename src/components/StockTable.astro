@@ -1,5 +1,6 @@
 ---
 import type { Column } from '../lib/columns.ts';
+import { QUOTE_PROVIDER, quoteUrl } from '../lib/links.ts';
 import { sortValueOf } from '../lib/sort.ts';
 import type { StockSnapshot } from '../lib/types.ts';
 import { withBase } from '../lib/url.ts';
@@ -109,11 +110,27 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
         {
           stocks.map((s) => (
             <tr>
-              {columns.map((c) => (
-                <td class={`${c.align === 'left' ? 'left' : ''} ${c.trend?.(s) ?? ''}`}>
-                  {c.render(s)}
-                </td>
-              ))}
+              {columns.map((c) => {
+                const href = c.href?.(s);
+                return (
+                  <td class={`${c.align === 'left' ? 'left' : ''} ${c.trend?.(s) ?? ''}`}>
+                    {href ? (
+                      <a
+                        class="out"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-external
+                        title={`${s.ticker} on ${QUOTE_PROVIDER} (opens in a new tab)`}
+                      >
+                        {c.render(s)}
+                      </a>
+                    ) : (
+                      c.render(s)
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           ))
         }
@@ -128,7 +145,23 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
           <details>
             <summary>
               <span class="sym">
-                <strong>{s.ticker}</strong>
+                <strong>
+                  {quoteUrl(s.ticker) ? (
+                    <a
+                      class="out"
+                      href={quoteUrl(s.ticker)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-external
+                      aria-label={`${s.ticker} on ${QUOTE_PROVIDER}, opens in a new tab`}
+                    >
+                      {s.ticker}
+                      <span class="out-mark" aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    s.ticker
+                  )}
+                </strong>
                 <small>{s.name}</small>
               </span>
               <span class="quick">
@@ -178,6 +211,14 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
 
   // Progressive: the rows are already in a meaningful order when this runs, and
   // every control below is inert-but-harmless if it never does.
+  // Before anything else, and outside every early exit below: without this,
+  // tapping a ticker in a card both follows the link and expands the card
+  // behind it, because the anchor sits inside the <summary>. A one-row group
+  // has nothing to sort but still has a link.
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-external]')) {
+    link.addEventListener('click', (event) => event.stopPropagation());
+  }
+
   for (const root of document.querySelectorAll<HTMLElement>('.sortable')) {
     const payload = root.querySelector('[data-sort-values]')?.textContent;
     const tbody = root.querySelector('tbody');
@@ -383,6 +424,11 @@ const faqLink = (key: string) => withBase(`/faq#col-${key}`);
     flex-direction: column;
     gap: 0.4rem;
   }
+  /* Distinguishable from plain text without shouting (UI-43). */
+  .out { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; }
+  .out:hover { color: var(--accent); }
+  .out-mark { font-size: 0.7em; margin-left: 0.15rem; opacity: 0.6; }
+
   .sym { display: flex; align-items: baseline; gap: 0.5rem; }
   .sym small { color: var(--muted); }
   .quick { display: flex; flex-wrap: wrap; gap: 0.4rem; }
