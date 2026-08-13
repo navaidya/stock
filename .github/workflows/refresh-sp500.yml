@@ -32,7 +32,12 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           ./scripts/commit-data.sh data/sp500.json 'chore: refresh S&P 500 data'
-      - run: git push
+      # This run takes ~35-40 minutes, long enough for refresh-data.yml to land
+      # a commit on main first — a plain push then gets rejected as non-fast-
+      # forward and the whole collection is lost (COL-24). The two workflows
+      # never touch the same file, so rebasing onto whatever landed is always
+      # conflict-free; retry a few times in case a third push lands mid-rebase.
+      - run: ./scripts/push-with-rebase.sh
 
   # Same reasoning as refresh-data.yml's deploy job (COL-17): a push made with
   # GITHUB_TOKEN does not trigger deploy.yml's own push trigger, so it has to

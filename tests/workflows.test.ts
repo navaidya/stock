@@ -44,6 +44,12 @@ describe('refresh-data workflow', () => {
     // The original bug, kept out by name: it ran cleanly and committed nothing.
     expect(steps.some((run: string) => run.includes('commit -am'))).toBe(false);
   });
+
+  it('[COL-24] pushes through the rebase-and-retry script, not a bare git push', () => {
+    const steps = refresh.jobs.refresh.steps.map((s: { run?: string }) => s.run?.trim() ?? '');
+    expect(steps).toContain('./scripts/push-with-rebase.sh');
+    expect(steps).not.toContain('git push');
+  });
 });
 
 describe('refresh-sp500 workflow', () => {
@@ -74,6 +80,12 @@ describe('refresh-sp500 workflow', () => {
     expect(deployJob.uses).toBe('./.github/workflows/deploy.yml');
     expect(deployJob.needs).toBe('refresh');
     expect(deployJob.with.ref).toBe('main');
+  });
+
+  it('[COL-24] pushes through the rebase-and-retry script, not a bare git push', () => {
+    const steps = refreshSp500.jobs.refresh.steps.map((s: { run?: string }) => s.run?.trim() ?? '');
+    expect(steps).toContain('./scripts/push-with-rebase.sh');
+    expect(steps).not.toContain('git push');
   });
 });
 

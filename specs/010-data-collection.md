@@ -7,6 +7,7 @@ when that goes wrong.
 
 **Implementation:** [scripts/collect.mjs](../scripts/collect.mjs),
 [scripts/commit-data.sh](../scripts/commit-data.sh),
+[scripts/push-with-rebase.sh](../scripts/push-with-rebase.sh),
 [.github/workflows/refresh-data.yml](../.github/workflows/refresh-data.yml),
 [.github/workflows/refresh-sp500.yml](../.github/workflows/refresh-sp500.yml),
 [data/sp500.yaml](../data/sp500.yaml)
@@ -81,6 +82,13 @@ second collector is drift between the two, not extra code.
 - **COL-23** `MUST` `test` — `data/sp500.yaml` parses, is non-empty, and
   contains no duplicate tickers, mirroring `COL-8` for the third curated
   list.
+- **COL-24** `MUST` `test` — Both refresh workflows push through
+  `scripts/push-with-rebase.sh`, which rebases onto `origin/main` and retries
+  on a rejected push rather than failing the run. The S&P 500 collection takes
+  long enough that `refresh-data.yml` routinely lands a commit on `main`
+  first; the two workflows never touch the same file, so a rejected push here
+  is always a stale base, never a real conflict, and a plain `git push` would
+  silently discard the whole run's collected data on the first such race.
 
 ### Failure semantics
 

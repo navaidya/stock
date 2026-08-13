@@ -43,7 +43,11 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           ./scripts/commit-data.sh
           ./scripts/commit-data.sh data/brief.json 'chore: refresh daily brief' --optional
-      - run: git push
+      # See scripts/push-with-rebase.sh (COL-24): a plain `git push` can be
+      # rejected as non-fast-forward if refresh-sp500.yml's ~35-40 minute run
+      # lands a commit on main first. The two workflows never touch the same
+      # file, so rebasing onto whatever landed is always conflict-free.
+      - run: ./scripts/push-with-rebase.sh
 
   # The push above is made with GITHUB_TOKEN, and GitHub does not trigger
   # workflows from such a push — so deploy.yml's push trigger never fires for a
