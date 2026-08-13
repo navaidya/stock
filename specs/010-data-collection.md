@@ -108,10 +108,6 @@ be worse than no run.
 
 ## Known gaps
 
-**`COL-2` is currently unmet:** no `FINNHUB_API_KEY` secret is configured on the
-repository, so every scheduled run exits 1. This requires a manual step outside
-the repo and cannot be fixed by a commit.
-
 **`COL-4`, `COL-5` and `COL-11` are unverified.** The collector's retention
 logic has no test coverage, because `scripts/collect.mjs` performs its own I/O
 and network calls at module scope. Promoting these to `test` requires extracting

@@ -113,10 +113,8 @@ citing it, if a test cites an ID no spec defines, or if an ID is defined twice.
 ## Known gaps
 
 The honest ones live in the conformance table in
-[`specs/SPEC.md`](specs/SPEC.md) §6. The two that matter today:
+[`specs/SPEC.md`](specs/SPEC.md) §6. The one that matters today:
 
-- **No `FINNHUB_API_KEY` is configured**, so nothing has been collected and the
-  published columns are blank.
 - **The seeded credit ratings and RPO figures in `data/reference.yaml` are
   unverified** — written from recall, each carrying an as-of date, none checked
   against an agency page or a filing. Verify before relying on them.

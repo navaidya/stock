@@ -1,6 +1,6 @@
 # Master specification — Stock Analysis Dashboard
 
-**Status:** active · **Last reviewed:** 2026-08-12
+**Status:** active · **Last reviewed:** 2026-08-13
 
 This is the root specification. It defines what the system is, the invariants
 that hold across every part of it, and the index of child specs. Child specs
@@ -32,7 +32,8 @@ not answer "what should I buy."
 - Three static views over that data: watchlist, AI-exposure, dividends, plus a
   glossary page explaining every column.
 - Client-side sorting and filtering of any column on any view.
-- A short machine-written brief over each collection, generated in CI.
+- A short machine-written brief over each collection, generated outside the
+  browser — in CI, or locally by the owner.
 - Deterministic derived metrics computed from collected fields.
 
 ### Non-goals
@@ -71,7 +72,7 @@ data/ai-universe.yaml┤
                      │            │
                      │            │
                      │    scripts/brief.mjs ──> Anthropic API
-                     │            │  (CI only, optional)
+                     │            │  (optional; CI or local)
                      │            v
 data/reference.yaml ─┤    data/brief.json
   (hand-curated)     │            │ (3) commit triggers deploy
@@ -134,7 +135,6 @@ empty list is the goal, not the assumption.
 
 | ID | Gap | Impact | Status |
 |---|---|---|---|
-| `COL-2` | No `FINNHUB_API_KEY` secret is configured on the repository. | The collector exits 1 on every scheduled run. No data has ever been collected, so every column on the published dashboard is blank. | **Open** — needs a manual step outside the repo, and is the only remaining blocker to data appearing |
 | `SEC-4` | `data/watchlist.yaml` is committed and labelled "Home page watchlist" with 15 specific tickers, and the home page describes it as "Tracked positions and watchlist". | A personal watchlist is personal information in a public repo. Already in git history, so removal requires a history rewrite. | **Open** — needs a decision |
 | `COL-4`, `COL-5`, `COL-11` | The collector's failure-retention logic is not covered by any test, because the run loop does its own I/O at module scope. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect. `COL-3` left this list when the pacing arithmetic moved into a tested pure function |
 | `BRF-2` | No `ANTHROPIC_API_KEY` secret is configured, so no brief is generated. | The home page renders without a brief, which is the specified degraded state rather than a defect. | **Open by choice** — closes when the secret is added; costs nothing until then |
