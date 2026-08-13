@@ -53,6 +53,11 @@ one of them is a change to this spec, not a feature.
 - **Portfolio tracking** — holdings, position sizes, cost basis, or P&L. See
   [040-privacy-and-secrets.md](040-privacy-and-secrets.md).
 - **Recommendations, scores, or rankings by investment quality.** See `SYS-5`.
+  One narrow, deliberate exception: the Financial Health score is a single
+  disclosed composite of profitability and balance-sheet stability, excluding
+  valuation, growth and momentum by construction, never rendered as an ordinal
+  rank. See `030-presentation.md` `UI-45`..`UI-48` for the constraints that
+  keep it on the data side of this line rather than the advice side.
 - **Backtesting, charting, or historical time-series storage.** The system
   stores one current snapshot, not a history.
 
@@ -137,7 +142,7 @@ empty list is the goal, not the assumption.
 |---|---|---|---|
 | `COL-4`, `COL-5`, `COL-11` | The collector's failure-retention logic is not covered by any test, because the run loop does its own I/O at module scope. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect. `COL-3` left this list when the pacing arithmetic moved into a tested pure function |
 | `BRF-2` | No `ANTHROPIC_API_KEY` secret is configured, so no brief is generated. | The home page renders without a brief, which is the specified degraded state rather than a defect. | **Open by choice** — closes when the secret is added; costs nothing until then |
-| `MOD-24` | The seed values in `data/reference.yaml` were written from an agent's recall of public filings and rating actions, not read off a primary source. Each carries an `asOf` date and a source note, but none has been checked against it. | Credit ratings and RPO figures are shown on the dashboard as facts. A wrong rating is precisely the substituted value `SYS-7` exists to prevent. | **Open** — every seeded value needs verification against the issuer's rating page or filing; the mechanism is correct, the data is provisional |
+| `MOD-24` | The seed values in `data/reference.yaml` were written from an agent's recall of public filings and rating actions, not read off a primary source. Each carries an `asOf` date and a source note, but none has been checked against it. | The credit rating column shows these as facts on the dashboard; RPO is no longer a column but is still shown, per-ticker, in the FAQ's curated-values table. A wrong rating is precisely the substituted value `SYS-7` exists to prevent. | **Open** — every seeded value needs verification against the issuer's rating page or filing; the mechanism is correct, the data is provisional |
 
 ## 7. Glossary
 
@@ -151,5 +156,6 @@ empty list is the goal, not the assumption.
 | **Reference value** | A hand-curated public fact the API does not carry — a credit rating, an RPO figure — dated at its source in `data/reference.yaml`. |
 | **RPO** | Remaining performance obligation: contracted revenue not yet recognised. A backlog figure, disclosed quarterly in the filings. |
 | **Brief** | The machine-written summary of one collection, in `data/brief.json`. Describes the data; never advises. |
+| **Financial Health score** | A 0–100 composite of profitability and balance-sheet stability only — see `src/lib/health.ts` and `020-data-model.md` `MOD-31`..`MOD-33`. The one exception to the no-composite-scores rule; never a ranking, never advice. |
 | **Stale** | Data older than 24 hours, or never collected. Surfaced in the UI, never hidden. |
 | **Free tier** | Finnhub's no-cost plan: 60 calls/minute, and an unpredictable subset of metrics per symbol. |

@@ -1,6 +1,6 @@
 # 020 — Data model and normalization
 
-**Prefix:** `MOD` · **Status:** active · **Implements:** `SYS-4`, `SYS-6`, `SYS-7`
+**Prefix:** `MOD` · **Status:** active · **Implements:** `SYS-4`, `SYS-5`, `SYS-6`, `SYS-7`
 
 Owns the snapshot schema, the mapping from raw Finnhub responses into it, the
 derived metrics, and the formatting of values for display.
@@ -9,7 +9,8 @@ derived metrics, and the formatting of values for display.
 [src/lib/finnhub.ts](../src/lib/finnhub.ts),
 [src/lib/data.ts](../src/lib/data.ts),
 [src/lib/format.ts](../src/lib/format.ts),
-[src/lib/rating.ts](../src/lib/rating.ts)
+[src/lib/rating.ts](../src/lib/rating.ts),
+[src/lib/health.ts](../src/lib/health.ts)
 
 ---
 
@@ -69,9 +70,41 @@ specification — the arithmetic is the easy part.
   meaningful FCF yield, and `1 / negative` would render as a plausible-looking
   negative percentage.
 - **MOD-6** `MUST` `test` — For an entry marked `isEtf`, company-only metrics
-  are stripped: P/E, forward P/E, PEG, P/S, gross and operating margin, ROE,
-  revenue and EPS growth, D/E, current ratio, EV/FCF, and FCF yield. Finnhub
-  returns nonsense for these on a fund rather than omitting them.
+  are stripped or never computed: P/E, forward P/E, PEG, P/S, gross and
+  operating margin, ROE, revenue and EPS growth, D/E, current ratio, EV/FCF,
+  FCF yield, next earnings date, and Financial Health score. Finnhub returns
+  nonsense for most of these on a fund rather than omitting them; earnings date
+  and health score simply do not apply to one.
+
+### Financial Health score
+
+A single disclosed number summarising profitability and balance-sheet
+stability, and nothing past that — full design reasoning and the exact
+component list in [src/lib/health.ts](../src/lib/health.ts). It exists to
+answer "how sound are the fundamentals" with one sortable column, without that
+column becoming the composite investment-quality ranking `SYS-5` and `UI-45`
+otherwise forbid — see the presentation spec for the boundary that keeps it on
+the right side of that line.
+
+- **MOD-31** `MUST` `test` — `healthScore` averages up to five components, each
+  linearly mapped onto a fixed 0–100 range and clamped at both ends: gross
+  margin (0 to 80%), operating margin (-20 to 40%), ROE (-20 to 40%, capped so
+  ROE inflated by leverage or buybacks stops adding to the score past 40%),
+  debt-to-equity inverted (0 to 3, lower is healthier), and current ratio (0 to
+  2.5). The ranges are fixed in code and quoted in the FAQ — nothing about the
+  formula is discovered at run time.
+- **MOD-32** `MUST` `test` — `healthScore` is computed only when at least three
+  of the five components are present, and a negative debt-to-equity or current
+  ratio is treated as absent rather than scored, since the normalization would
+  otherwise read negative equity as the best possible value. Fewer than three
+  components yields no score, never one built on a couple of numbers.
+- **MOD-33** `MUST` `manual` — `healthScore` excludes valuation, price
+  momentum, growth, dividend policy and external ratings by construction. It
+  measures profitability and balance-sheet stability only, so an expensive and
+  a cheap company with identical fundamentals score identically. It is
+  computed once, deterministically, from collected fields — no model, no
+  judgment applied at render time — and must never be presented as a signal of
+  whether now is a good time to buy (`SYS-5`).
 
 ### Calendar and activity
 

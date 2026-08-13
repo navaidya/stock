@@ -223,6 +223,14 @@ export const glossary: Record<string, GlossaryEntry> = {
     watch:
       'It rates the debt, not the equity. Agencies are late by design and move in notches long after the market has repriced. This column is hand-curated from public rating actions, not collected — each value carries an as-of date below, and none of the seeded values has been verified against a primary source yet.',
   },
+  healthScore: {
+    term: 'Financial Health score',
+    group: 'Financial health and credit',
+    what: 'A 0–100 average of five components, each mapped onto a fixed 0–100 scale and equally weighted: gross margin (0–80%), operating margin (-20–40%), ROE (-20–40%, capped so leverage-driven ROE stops helping past 40%), debt/equity (0–3, lower is better), and current ratio (0–2.5). Computed only when at least three of the five are available; otherwise shown as absent rather than built on a couple of numbers.',
+    why: 'One number for "how sound are the fundamentals," on the two things that number actually measures: making money, and not being fragile. Nothing else — no price, no valuation, no growth rate, no analyst opinion — goes into it, and the formula above is the whole formula, not a summary of a hidden one.',
+    watch:
+      'This is not a rank and not a recommendation. It says nothing about price, so a financially strong company trading at an extreme valuation scores the same as one trading cheaply — expensive-and-sound and cheap-and-sound are indistinguishable here, on purpose. It also says nothing about growth or momentum. A company can improve its score by paying down debt or expanding margins and still be a bad time to buy for reasons entirely outside these five numbers. Sort this column like any other if you want to see who ranks where today — the dashboard will not tell you which end of that sort matters to you.',
+  },
 
   dividendYield: {
     term: 'Dividend yield',

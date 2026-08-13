@@ -1,4 +1,5 @@
 import { isoDate } from './dates.ts';
+import { computeHealthScore } from './health.ts';
 import type { StockSnapshot } from './types.ts';
 
 /** Pure mapping from Finnhub's raw responses to our snapshot shape.
@@ -151,6 +152,15 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
 
   const earnings = nextEarnings(input.earnings, input.today);
 
+  const grossMargin = pick(m, 'grossMarginTTM', 'grossMarginAnnual');
+  const operatingMargin = pick(m, 'operatingMarginTTM', 'operatingMarginAnnual');
+  const roe = pick(m, 'roeTTM', 'roeRfy');
+  const debtToEquity = pick(m, 'totalDebt/totalEquityQuarterly', 'totalDebt/totalEquityAnnual');
+  const currentRatio = pick(m, 'currentRatioQuarterly', 'currentRatioAnnual');
+  const healthScore = input.isEtf
+    ? undefined
+    : computeHealthScore({ grossMargin, operatingMargin, roe, debtToEquity, currentRatio });
+
   const snapshot: StockSnapshot = {
     ticker,
     name: input.name || profile?.name || ticker,
@@ -183,12 +193,13 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
     revenueGrowthYoY: pick(m, 'revenueGrowthTTMYoy', 'revenueGrowthQuarterlyYoy'),
     epsGrowthYoY: pick(m, 'epsGrowthTTMYoy', 'epsGrowthQuarterlyYoy'),
 
-    grossMargin: pick(m, 'grossMarginTTM', 'grossMarginAnnual'),
-    operatingMargin: pick(m, 'operatingMarginTTM', 'operatingMarginAnnual'),
-    roe: pick(m, 'roeTTM', 'roeRfy'),
+    grossMargin,
+    operatingMargin,
+    roe,
 
-    debtToEquity: pick(m, 'totalDebt/totalEquityQuarterly', 'totalDebt/totalEquityAnnual'),
-    currentRatio: pick(m, 'currentRatioQuarterly', 'currentRatioAnnual'),
+    debtToEquity,
+    currentRatio,
+    healthScore,
 
     dividendYield: pick(m, 'dividendYieldIndicatedAnnual', 'currentDividendYieldTTM'),
     payoutRatio: pick(m, 'payoutRatioTTM', 'payoutRatioAnnual'),

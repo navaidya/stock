@@ -91,6 +91,18 @@ const volumeColumn: Column = {
   render: (s) => ratio(s.volumeRatio10D3M),
 };
 
+/** Profitability and balance-sheet stability, disclosed and deterministic —
+ *  not valuation, not growth, not momentum, and not a signal to buy (MOD-33).
+ *  Sorts like any other numeric column; there is no separate rank column, and
+ *  clicking this header descending is how to see "who looks strongest today"
+ *  without the dashboard itself declaring a winner. */
+const healthColumn: Column = {
+  key: 'healthScore',
+  label: 'Health',
+  help: 'Profitability and balance-sheet stability, 0-100. Excludes valuation, growth and momentum entirely — see the FAQ for the formula. Not a recommendation',
+  render: (s) => num(s.healthScore, 0),
+};
+
 const identity: Column[] = [
   {
     key: 'ticker',
@@ -225,6 +237,7 @@ export const homeColumns: Column[] = [
   },
   creditRatingColumn,
   volumeColumn,
+  healthColumn,
   {
     key: 'dividendYield',
     label: 'Yield',
@@ -330,6 +343,7 @@ export const dividendColumns: Column[] = [
     render: (s) => num(s.debtToEquity, 2),
   },
   creditRatingColumn,
+  healthColumn,
   {
     key: 'peTTM',
     label: 'P/E',

@@ -54,6 +54,12 @@ export interface StockSnapshot {
   // Financial health
   debtToEquity?: number;
   currentRatio?: number;
+  /** 0–100. A disclosed, deterministic composite of profitability and
+   *  balance-sheet stability only — no valuation, growth, momentum or
+   *  dividend policy. Undefined for ETFs and for a name with too few of its
+   *  five components present (MOD-31, MOD-32). Never a ranking, never advice
+   *  about whether to buy (`SYS-5`) — see src/lib/health.ts. */
+  healthScore?: number;
 
   // Income
   dividendYield?: number;

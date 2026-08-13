@@ -30,7 +30,7 @@ that matter for the question that page answers.
 Two consequences of the column set being wide follow from that same fact.
 **Sorting** is how a twenty-column table becomes answerable — "which of these is
 furthest off its high" is a question about one column, and it is a fair question
-because it names its metric (`UI-9`). Sorting is client-side and additive: the
+because it names its metric (`UI-45`). Sorting is client-side and additive: the
 prerendered order is meaningful on its own, so the page is complete before any
 script runs. **A glossary** is the other consequence: a label short enough to fit
 a column header is rarely self-explanatory, and `title` text does not exist on a
@@ -187,11 +187,34 @@ Most columns answer "what is this worth", which changes slowly. These two answer
 
 ### Editorial constraints
 
-- **UI-9** `MUST` `manual` — No page renders a buy/sell recommendation, a
-  composite score, a rating, or any ordering that implies investment quality
-  (`SYS-5`). Sorting by a single stated metric — yield, market cap — is
-  presenting data and is permitted; sorting by an aggregate "attractiveness" is
-  not.
+- **UI-9** `WITHDRAWN` — Superseded by UI-45 through UI-48, which permit
+  exactly one disclosed composite metric under strict constraints instead of
+  banning composite scores outright. Original text, kept for the reasoning:
+  "No page renders a buy/sell recommendation, a composite score, a rating, or
+  any ordering that implies investment quality (SYS-5). Sorting by a single
+  stated metric — yield, market cap — is presenting data and is permitted;
+  sorting by an aggregate 'attractiveness' is not."
+- **UI-45** `MUST` `manual` — No page renders a buy/sell recommendation, a
+  price target, or any ordering that implies investment quality, with exactly
+  one exception: the Financial Health score, admitted only because UI-46
+  through UI-48 hold. Sorting by any single stated metric remains permitted, as
+  under the original `UI-9`; the boundary this requirement protects is against
+  a *second* composite, or against loosening the constraints on the first one
+  (`SYS-5`).
+- **UI-46** `MUST` `build` — The Financial Health score's formula — every
+  component, its clamp range, and the minimum-components rule — is stated in
+  full on `/faq`, matching `src/lib/health.ts` exactly. A composite metric
+  whose formula is not fully public does not qualify for the `UI-45`
+  exception.
+- **UI-47** `MUST` `manual` — The Financial Health score renders as a plain
+  0–100 number in its own column, never as a 1..N ordinal "Rank" position
+  spanning the page. A reader who wants that ordering gets it by sorting the
+  column descending — the dashboard itself never states a winner.
+- **UI-48** `MUST` `manual` — Neither the column label nor its help text nor
+  the FAQ entry uses recommendation vocabulary — "buy", "best", "top pick",
+  "invest now" — for the Financial Health score. The FAQ states plainly that
+  it excludes valuation, growth and momentum, and that it is not advice about
+  whether now is a good time to buy (`MOD-33`).
 - **UI-20** `MUST` `manual` — No page displays holdings, position sizes, cost
   basis, or P&L, and no page copy implies the lists represent owned positions
   (see [040-privacy-and-secrets.md](040-privacy-and-secrets.md)).
@@ -201,3 +224,7 @@ Most columns answer "what is this worth", which changes slowly. These two answer
 None open. `UI-20` was violated in copy — the home page subtitle read "Tracked
 positions and watchlist", implying a portfolio the page does not and must not
 contain. The subtitle now says what the list actually is.
+
+`UI-9` was withdrawn and replaced by `UI-45`..`UI-48` when the Financial Health
+score was added — see [SPEC.md](SPEC.md) §2 for why that one composite was
+judged not to be the thing `SYS-5` exists to prevent.
