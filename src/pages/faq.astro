@@ -195,6 +195,12 @@ const referenceRows = Object.entries(reference).sort(([a], [b]) => a.localeCompa
         the number is right. If no note appears, none was generated — the
         dashboard works exactly the same without it.
       </p>
+      <p>
+        No API key is stored in this repository. Keys live either in GitHub's
+        encrypted secret store, which never renders them into a file, or in a
+        gitignored <code>.env</code> on the owner's own machine — the generator
+        runs the same either way, and the published page is identical.
+      </p>
     </article>
 
     <article>

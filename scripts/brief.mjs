@@ -13,6 +13,11 @@
  *  (BRF-2, BRF-5). The dashboard is the product; this is a note stapled to it,
  *  and a note failing to write must never fail a data refresh.
  *
+ *  Runs the same in CI and on a laptop: `npm run brief` loads a gitignored .env
+ *  when one exists, so an owner who would rather not hand a model key to GitHub
+ *  can generate the brief locally and commit the result (BRF-12). No key is
+ *  committed on either path.
+ *
  *  Raw HTTP rather than the Anthropic SDK on purpose: CLAUDE.md forbids adding
  *  a dependency without explicit approval, and one POST does not justify
  *  asking. If the SDK is ever approved, this is the only file that changes.
@@ -41,7 +46,10 @@ function skip(reason) {
 
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) {
-  skip('ANTHROPIC_API_KEY is not set. Add it to repository secrets to enable the brief.');
+  skip(
+    'ANTHROPIC_API_KEY is not set. Put it in a local .env (loaded automatically, ' +
+      'gitignored) or in the repository\'s Actions secrets — either enables the brief.',
+  );
 }
 
 if (!existsSync(MARKET)) skip('data/market.json does not exist yet.');
