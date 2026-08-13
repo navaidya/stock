@@ -56,6 +56,22 @@ weakened to make a push succeed.
 - **DEL-10** `SHOULD` `manual` — Tooling written for this repo uses the Node
   standard library, so the quality gate itself adds no dependencies.
 
+### Publishing
+
+- **DEL-13** `MUST` `manual` — The repository's Pages source is **GitHub
+  Actions**, never "deploy from a branch". In branch mode GitHub runs its
+  built-in Jekyll workflow against the same Pages deployment that
+  `deploy.yml` targets, and the two race: whichever finishes last wins the
+  site. This is not hypothetical — it happened on 2026-08-13. The Jekyll build
+  had been failing on every run because the repository root held nothing it
+  could build, which is the only reason the real dashboard stayed up. Adding a
+  root `README.md` gave it an index, it succeeded for the first time, and the
+  live site became the rendered README.
+- **DEL-14** `MUST` `manual` — Nothing is added at the repository root that a
+  static-site generator would treat as an index. The protection for this is
+  `DEL-13`, not vigilance about filenames: under the correct Pages source no
+  root file can reach the published site at all.
+
 ### Environment
 
 - **DEL-11** `MUST` `ci` — CI runs Node 22.

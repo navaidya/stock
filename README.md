@@ -119,6 +119,21 @@ The honest ones live in the conformance table in
   unverified** — written from recall, each carrying an as-of date, none checked
   against an agency page or a filing. Verify before relying on them.
 
+## Deployment
+
+`main` deploys straight to GitHub Pages via `.github/workflows/deploy.yml`,
+which runs `npm ci`, `npm test`, `npm run build` and uploads `dist/`. There is
+no review step, which is why the gate must pass before any push.
+
+**The repository's Pages source must be set to "GitHub Actions"** (Settings →
+Pages → Build and deployment). If it is set to "deploy from a branch" instead,
+GitHub additionally runs its own built-in Jekyll workflow against the same
+site, and the two race — the last one to finish wins. In that mode a root
+`README.md` is published as the homepage in place of the dashboard, which is
+exactly what happened on 2026-08-13. The symptom to recognise: a workflow named
+*pages build and deployment* appearing in the Actions list. Under the correct
+setting it does not exist.
+
 ## Not investment advice
 
 The dashboard presents collected data and deterministic metrics computed from
