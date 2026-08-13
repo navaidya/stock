@@ -9,7 +9,6 @@ import {
   signedPct,
   text,
   trend,
-  usdMillions,
 } from './format.ts';
 import { shortDate } from './dates.ts';
 import { QUOTE_PROVIDER, quoteUrl } from './links.ts';
@@ -90,13 +89,6 @@ const volumeColumn: Column = {
   label: 'Vol 10D/3M',
   help: '10-day average daily volume over the 3-month average. Above 1 means the last two weeks have been busier than the quarter. Not intraday relative volume',
   render: (s) => ratio(s.volumeRatio10D3M),
-};
-
-const rpoColumn: Column = {
-  key: 'rpo',
-  label: 'RPO',
-  help: 'Remaining performance obligation — contracted revenue not yet recognised. Only software and cloud companies report it',
-  render: (s) => usdMillions(s.rpo),
 };
 
 const identity: Column[] = [
@@ -232,7 +224,6 @@ export const homeColumns: Column[] = [
     render: (s) => num(s.currentRatio, 2),
   },
   creditRatingColumn,
-  rpoColumn,
   volumeColumn,
   {
     key: 'dividendYield',

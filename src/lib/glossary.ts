@@ -224,15 +224,6 @@ export const glossary: Record<string, GlossaryEntry> = {
       'It rates the debt, not the equity. Agencies are late by design and move in notches long after the market has repriced. This column is hand-curated from public rating actions, not collected — each value carries an as-of date below, and none of the seeded values has been verified against a primary source yet.',
   },
 
-  rpo: {
-    term: 'Remaining performance obligation',
-    group: 'Backlog',
-    what: 'Contracted revenue not yet recognised — work a company is under contract to deliver and has not yet billed as revenue. Reported in the revenue recognition note each quarter.',
-    why: 'Forward visibility that revenue does not give. A cloud provider signing multi-year capacity contracts shows the demand in RPO quarters before it reaches the income statement.',
-    watch:
-      'Contracts, not cash. RPO can be concentrated in a few customers, stretch over many years at an unstated pace, and — depending on the terms — be cancellable. A large number says what has been signed, not what will be collected or when. Most companies do not report it at all, which is why this column is mostly empty; hand-curated, with as-of dates below.',
-  },
-
   dividendYield: {
     term: 'Dividend yield',
     group: 'Income',
