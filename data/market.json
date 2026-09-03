@@ -1,6 +1,33 @@
 {
-  "generatedAt": "2026-09-03T21:22:00.778Z",
-  "failed": [],
+  "generatedAt": "2026-09-03T23:19:17.826Z",
+  "failed": [
+    "ORCL",
+    "NVDA",
+    "AVGO",
+    "CRM",
+    "CMG",
+    "VZ",
+    "PFE",
+    "PLTR",
+    "META",
+    "CRWV",
+    "ANET",
+    "VOO",
+    "AMD",
+    "MRVL",
+    "TSM",
+    "ASML",
+    "MU",
+    "WDC",
+    "STX",
+    "ALAB",
+    "COHR",
+    "FN",
+    "VRT",
+    "ETN",
+    "GEV",
+    "CEG"
+  ],
   "stocks": {
     "ORCL": {
       "ticker": "ORCL",
@@ -36,7 +63,10 @@
       "dividendYield": 1.37634,
       "payoutRatio": 33.87,
       "dividendGrowth5Y": 14.35,
-      "fcfYield": 2.0193942624970216
+      "fcfYield": 2.0193942624970216,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "NVDA": {
       "ticker": "NVDA",
@@ -73,7 +103,10 @@
       "dividendYield": 0.03349,
       "payoutRatio": 3.51,
       "dividendGrowth5Y": 20.05,
-      "fcfYield": 2.3483604921224246
+      "fcfYield": 2.3483604921224246,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "AVGO": {
       "ticker": "AVGO",
@@ -110,7 +143,10 @@
       "dividendYield": 1.87972,
       "payoutRatio": 31.56,
       "dividendGrowth5Y": 11.45,
-      "fcfYield": 2.337808678413376
+      "fcfYield": 2.337808678413376,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "CRM": {
       "ticker": "CRM",
@@ -146,7 +182,10 @@
       "healthScore": 66,
       "dividendYield": 0.6918,
       "payoutRatio": 15.68,
-      "fcfYield": 6.920271551455678
+      "fcfYield": 6.920271551455678,
+      "errors": [
+        "stale: HTTP 504"
+      ]
     },
     "CMG": {
       "ticker": "CMG",
@@ -179,7 +218,10 @@
       "debtToEquity": 0,
       "currentRatio": 0.7153,
       "healthScore": 65,
-      "fcfYield": 3.2407032326014744
+      "fcfYield": 3.2407032326014744,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "ARM": {
       "ticker": "ARM",
@@ -284,7 +326,10 @@
       "dividendYield": 6.1374972890913035,
       "payoutRatio": 71.93,
       "dividendGrowth5Y": 1.96,
-      "fcfYield": 9.662022454540184
+      "fcfYield": 9.662022454540184,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "PFE": {
       "ticker": "PFE",
@@ -320,7 +365,10 @@
       "dividendYield": 5.37705,
       "payoutRatio": 80.25,
       "dividendGrowth5Y": 2.51,
-      "fcfYield": 6.71826292593787
+      "fcfYield": 6.71826292593787,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "PLTR": {
       "ticker": "PLTR",
@@ -353,7 +401,10 @@
       "debtToEquity": 0,
       "currentRatio": 7.2282,
       "healthScore": 99,
-      "fcfYield": 0.7772622801610798
+      "fcfYield": 0.7772622801610798,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "META": {
       "ticker": "META",
@@ -389,7 +440,10 @@
       "healthScore": 92,
       "dividendYield": 0.3554,
       "payoutRatio": 7.88,
-      "fcfYield": 2.7131225598853974
+      "fcfYield": 2.7131225598853974,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "CRWV": {
       "ticker": "CRWV",
@@ -417,7 +471,10 @@
       "roe": -40.33,
       "debtToEquity": 5.2736,
       "currentRatio": 0.3148,
-      "healthScore": 26
+      "healthScore": 26,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "ANET": {
       "ticker": "ANET",
@@ -451,7 +508,10 @@
       "debtToEquity": 0,
       "currentRatio": 2.9572,
       "healthScore": 93,
-      "fcfYield": 2.196416765688456
+      "fcfYield": 2.196416765688456,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "NFLX": {
       "ticker": "NFLX",
@@ -469,8 +529,6 @@
       "avgVolume10D": 25.4565,
       "avgVolume3M": 39.29434,
       "volumeRatio10D3M": 0.6478413939513935,
-      "earningsDate": "2026-10-19",
-      "earningsHour": "after close",
       "peTTM": 25.1429,
       "forwardPE": 19.66124,
       "pegTTM": 1.09409,
@@ -501,7 +559,10 @@
       "beta": 1.0174233,
       "avgVolume10D": 7.32108,
       "avgVolume3M": 7.42124,
-      "volumeRatio10D3M": 0.9865036031714377
+      "volumeRatio10D3M": 0.9865036031714377,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "AMD": {
       "ticker": "AMD",
@@ -536,7 +597,10 @@
       "debtToEquity": 0.048,
       "currentRatio": 2.6092,
       "healthScore": 75,
-      "fcfYield": 1.1291499082001124
+      "fcfYield": 1.1291499082001124,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "MRVL": {
       "ticker": "MRVL",
@@ -573,7 +637,10 @@
       "dividendYield": 0.42834,
       "payoutRatio": 8.2,
       "dividendGrowth5Y": -0.04,
-      "fcfYield": 0.853900232004693
+      "fcfYield": 0.853900232004693,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "TSM": {
       "ticker": "TSM",
@@ -611,7 +678,10 @@
       "dividendYield": 1.99301,
       "payoutRatio": 23.46,
       "dividendGrowth5Y": 12.47,
-      "fcfYield": 1.8400144257130977
+      "fcfYield": 1.8400144257130977,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "ASML": {
       "ticker": "ASML",
@@ -649,7 +719,10 @@
       "dividendYield": 0.94259,
       "payoutRatio": 27.78,
       "dividendGrowth5Y": 20.76,
-      "fcfYield": 2.0340458595979505
+      "fcfYield": 2.0340458595979505,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "AMAT": {
       "ticker": "AMAT",
@@ -668,8 +741,6 @@
       "avgVolume10D": 6.44663,
       "avgVolume3M": 8.93797,
       "volumeRatio10D3M": 0.7212633293689731,
-      "earningsDate": "2026-11-12",
-      "earningsHour": "after close",
       "peTTM": 37.5484,
       "forwardPE": 32.06094,
       "pegTTM": 1.48345,
@@ -762,7 +833,10 @@
       "dividendYield": 0.59841,
       "payoutRatio": 1.12,
       "dividendGrowth5Y": 44.19,
-      "fcfYield": 2.4484898938579627
+      "fcfYield": 2.4484898938579627,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "WDC": {
       "ticker": "WDC",
@@ -799,7 +873,10 @@
       "dividendYield": 0.1205012853470437,
       "payoutRatio": 1.95,
       "dividendGrowth5Y": -23.08,
-      "fcfYield": 2.269148207146001
+      "fcfYield": 2.269148207146001,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "STX": {
       "ticker": "STX",
@@ -836,7 +913,10 @@
       "dividendYield": 3.68034,
       "payoutRatio": 19.91,
       "dividendGrowth5Y": 1.47,
-      "fcfYield": 1.4869026182868206
+      "fcfYield": 1.4869026182868206,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "ALAB": {
       "ticker": "ALAB",
@@ -870,7 +950,10 @@
       "debtToEquity": 0,
       "currentRatio": 10.0537,
       "healthScore": 88,
-      "fcfYield": 0.4940862812991307
+      "fcfYield": 0.4940862812991307,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "COHR": {
       "ticker": "COHR",
@@ -905,7 +988,10 @@
       "dividendYield": 0.0217,
       "payoutRatio": 5.05,
       "dividendGrowth5Y": -20.51,
-      "fcfYield": 0.48708968782421913
+      "fcfYield": 0.48708968782421913,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "FN": {
       "ticker": "FN",
@@ -939,7 +1025,10 @@
       "debtToEquity": 0,
       "currentRatio": 2.2527,
       "healthScore": 65,
-      "fcfYield": 1.4178544742524717
+      "fcfYield": 1.4178544742524717,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "VRT": {
       "ticker": "VRT",
@@ -976,7 +1065,10 @@
       "dividendYield": 0.10348967173076128,
       "payoutRatio": 4.97,
       "dividendGrowth5Y": 77.87,
-      "fcfYield": 2.868074317541716
+      "fcfYield": 2.868074317541716,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "ETN": {
       "ticker": "ETN",
@@ -1014,7 +1106,10 @@
       "dividendYield": 1.50402,
       "payoutRatio": 43.49,
       "dividendGrowth5Y": 7.53,
-      "fcfYield": 2.6084053253203123
+      "fcfYield": 2.6084053253203123,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "GEV": {
       "ticker": "GEV",
@@ -1050,7 +1145,10 @@
       "healthScore": 62,
       "dividendYield": 0.1463,
       "payoutRatio": 4.29,
-      "fcfYield": 4.451586768103491
+      "fcfYield": 4.451586768103491,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "CEG": {
       "ticker": "CEG",
@@ -1086,7 +1184,10 @@
       "healthScore": 61,
       "dividendYield": 0.91071,
       "payoutRatio": 72.78,
-      "fcfYield": 2.196016426202868
+      "fcfYield": 2.196016426202868,
+      "errors": [
+        "stale: HTTP 503"
+      ]
     },
     "SMCI": {
       "ticker": "SMCI",
@@ -1105,7 +1206,6 @@
       "avgVolume10D": 36.33576,
       "avgVolume3M": 52.52406,
       "volumeRatio10D3M": 0.6917926755852462,
-      "earningsDate": "2026-11-02",
       "peTTM": 11.1647,
       "forwardPE": 8.36473,
       "pegTTM": 0.31154,
