@@ -70,6 +70,24 @@ describe('macro event calendar', () => {
     }
   });
 
+  it('[MAC-18] every event carries a non-empty about explainer', () => {
+    for (const event of loadMacroEvents()) {
+      expect(event.about, `${event.id} missing about`).toBeTruthy();
+      expect(event.about.length, `${event.id} about too short to be useful`).toBeGreaterThan(20);
+    }
+  });
+
+  it('[MAC-18, SYS-5] no about explainer uses directive or recommendation vocabulary', () => {
+    for (const event of loadMacroEvents()) {
+      const text = event.about.toLowerCase();
+      for (const directive of [
+        'you should', 'buy', 'sell', 'invest', 'best time', 'recommend',
+      ]) {
+        expect(text, `${event.id} about contains "${directive}"`).not.toContain(directive);
+      }
+    }
+  });
+
   it('every non-fomc event declares a FRED series and a derivation', () => {
     for (const event of loadMacroEvents().filter((e) => e.id !== 'fomc')) {
       expect(event.fredSeries, `${event.id} missing fredSeries`).toBeTruthy();

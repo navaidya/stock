@@ -134,6 +134,11 @@ export interface MacroEvent {
    *  reference.yaml. Absent for a series with no fixed announced schedule. */
   nextRelease?: { date: string; asOf: string };
   meetingCalendar?: { asOf: string; dates: string[] };
+  /** One-line, plain-English explanation of what the number measures and
+   *  which direction means what — descriptive, never a recommendation
+   *  (MAC-18, same UI-45/SYS-5 boundary the Health score holds to). Every
+   *  event has one. */
+  about: string;
 }
 
 /** One point in a mirrored macro or Treasury-yield series — see

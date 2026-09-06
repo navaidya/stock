@@ -148,6 +148,11 @@ these schedules shift for holidays and do not actually follow one.
   discipline `MAC-2` already applies to the FOMC calendar. A series with no
   fixed announced release day (the fed funds rate) carries no `nextRelease`
   rather than an invented one.
+- **MAC-18** `MUST` `test` — Every event carries a non-empty `about` field: a
+  one-line, plain-English statement of what the number measures and which
+  direction means what — descriptive ("prices are rising faster"), never
+  directive ("you should sell"). Same recommendation-vocabulary boundary
+  `UI-48` holds the Health score to (`SYS-5`).
 
 ## Known gaps
 

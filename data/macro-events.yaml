@@ -1,4 +1,4 @@
-# Macro event calendar for the /macro page (MAC-1, MAC-2).
+# Macro event calendar for the /macro page (MAC-1, MAC-2, MAC-18).
 #
 # Two kinds of entry:
 #
@@ -24,6 +24,11 @@
 # which is tracked as an open item in SPEC.md's conformance table rather than
 # assumed to stay correct on its own.
 #
+# `about` (MAC-18): a one-line, plain-English explanation of what the number
+# measures and which direction means what — descriptive, not directive. It
+# says "prices are rising faster," never "you should sell" — see UI-45/SYS-5
+# for why that boundary matters here as much as it does on the Health score.
+#
 # PUBLIC REPO, PUBLIC DATA: none of this is personal — see CLAUDE.md.
 
 events:
@@ -37,6 +42,10 @@ events:
     unit: "% YoY"
     sourceUrl: https://www.bls.gov/cpi/
     nextRelease: { date: 2026-09-11, asOf: 2026-09-06 }
+    about: >-
+      Tracks how fast prices for a typical basket of consumer goods and
+      services are changing. A higher number means the cost of living is
+      rising faster; a lower or falling number means inflation is cooling.
 
   - id: corePce
     label: Core PCE Price Index
@@ -49,6 +58,11 @@ events:
     sourceUrl: https://www.bea.gov/data/personal-consumption-expenditures-price-index
     note: The Fed's own preferred inflation gauge, distinct from CPI.
     nextRelease: { date: 2026-09-30, asOf: 2026-09-06 }
+    about: >-
+      The Fed's own inflation gauge, excluding volatile food and energy
+      prices. The Fed's 2% target is set against this number specifically —
+      readings well above it make further rate hikes more likely, readings
+      near or below it make cuts easier to justify.
 
   - id: ppi
     label: Producer Price Index (Final Demand)
@@ -60,6 +74,11 @@ events:
     unit: "% YoY"
     sourceUrl: https://www.bls.gov/ppi/
     nextRelease: { date: 2026-09-10, asOf: 2026-09-06 }
+    about: >-
+      Measures price changes at the wholesale and producer level, before
+      goods reach consumers. Rising producer prices often pass through to
+      consumer prices (CPI) a few months later, so this is watched as an
+      early read on where CPI is headed.
 
   - id: unemploymentRate
     label: Unemployment Rate
@@ -71,6 +90,10 @@ events:
     unit: "%"
     sourceUrl: https://www.bls.gov/ces/
     nextRelease: { date: 2026-10-02, asOf: 2026-09-06 }
+    about: >-
+      Share of the labor force that is jobless and actively looking for
+      work. A rising rate signals a cooling labor market; a falling rate
+      signals a tightening one.
 
   - id: nonfarmPayrolls
     label: Nonfarm Payrolls (change)
@@ -82,6 +105,10 @@ events:
     unit: "thousands, MoM"
     sourceUrl: https://www.bls.gov/ces/
     nextRelease: { date: 2026-10-02, asOf: 2026-09-06 }
+    about: >-
+      Net jobs added or lost across the economy that month, outside farm
+      work. Strong, positive growth signals an expanding economy; weak or
+      negative growth signals a slowdown.
 
   - id: fedFundsRate
     label: Federal Funds Effective Rate
@@ -92,6 +119,10 @@ events:
     derive: level
     unit: "%"
     sourceUrl: https://www.federalreserve.gov/monetarypolicy.htm
+    about: >-
+      The rate banks charge each other for overnight loans, set by the
+      Fed's target range. Higher rates make borrowing more expensive
+      economy-wide; lower rates make it cheaper.
 
   - id: gdp
     label: Gross Domestic Product
@@ -103,6 +134,30 @@ events:
     unit: "$B, nominal, annualized"
     sourceUrl: https://www.bea.gov/data/gdp/gross-domestic-product
     nextRelease: { date: 2026-10-29, asOf: 2026-09-06 }
+    about: >-
+      The total dollar value of everything the economy produced, at
+      current prices — the size of the economy, not its growth rate. See
+      "Real GDP Growth" alongside it for the pace of change.
+
+  - id: gdpGrowth
+    label: Real GDP Growth (annualized)
+    agency: Bureau of Economic Analysis
+    category: growth
+    frequency: Quarterly, three estimates per quarter (advance, second, third)
+    fredSeries: A191RL1Q225SBEA
+    derive: level
+    unit: "% annualized"
+    sourceUrl: https://www.bea.gov/data/gdp/gross-domestic-product
+    nextRelease: { date: 2026-10-29, asOf: 2026-09-06 }
+    note: >-
+      This is the inflation-adjusted, annualized quarter-over-quarter rate —
+      the number usually meant by "GDP grew at X%" in headlines, distinct
+      from the nominal dollar level above it.
+    about: >-
+      How fast the economy's real (inflation-adjusted) output grew last
+      quarter, expressed as if that pace continued for a full year. Positive
+      and rising means the economy is expanding faster; negative for two
+      straight quarters is the common informal definition of a recession.
 
   - id: retailSales
     label: Retail Sales
@@ -114,6 +169,10 @@ events:
     unit: "$M"
     sourceUrl: https://www.census.gov/retail/index.html
     nextRelease: { date: 2026-09-16, asOf: 2026-09-06 }
+    about: >-
+      Total spending at retail stores and restaurants. Rising sales signal
+      strong consumer demand; falling sales can signal consumers pulling
+      back.
 
   - id: consumerSentiment
     label: Consumer Sentiment (University of Michigan)
@@ -125,6 +184,11 @@ events:
     unit: index
     sourceUrl: https://www.sca.isr.umich.edu/
     nextRelease: { date: 2026-09-25, asOf: 2026-09-06 }
+    about: >-
+      A survey-based gauge of how optimistic households feel about their
+      own finances and the economy. Falling sentiment often precedes a
+      pullback in consumer spending; rising sentiment often precedes more
+      of it.
 
   - id: fomc
     label: FOMC Meeting & Rate Decision
@@ -133,6 +197,10 @@ events:
     frequency: 8x/year, ~every 6-7 weeks
     fredSeries: null
     sourceUrl: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    about: >-
+      The Fed's periodic decision on the federal funds target rate — the
+      single scheduled policy event most likely to move the whole market on
+      the day it happens.
     meetingCalendar:
       asOf: 2026-09-06
       # Decision day of each 2026 meeting (the second day of each two-day
