@@ -15,6 +15,15 @@
 #    it by hand once the Fed publishes next year's dates (usually mid-year;
 #    see MOD-24 for the same discipline applied to reference.yaml).
 #
+# `nextRelease` (MAC-17): every FRED-backed event except fedFundsRate (a daily
+# reading with no single "release day") also carries the single next known
+# release date, read off that agency's own published release calendar — not
+# guessed from the frequency text. Like the FOMC calendar, this is only as
+# current as its `asOf` date and goes stale the day after that release
+# happens — it needs hand-refreshing against the source roughly monthly,
+# which is tracked as an open item in SPEC.md's conformance table rather than
+# assumed to stay correct on its own.
+#
 # PUBLIC REPO, PUBLIC DATA: none of this is personal — see CLAUDE.md.
 
 events:
@@ -27,6 +36,7 @@ events:
     derive: yoy
     unit: "% YoY"
     sourceUrl: https://www.bls.gov/cpi/
+    nextRelease: { date: 2026-09-11, asOf: 2026-09-06 }
 
   - id: corePce
     label: Core PCE Price Index
@@ -38,6 +48,7 @@ events:
     unit: "% YoY"
     sourceUrl: https://www.bea.gov/data/personal-consumption-expenditures-price-index
     note: The Fed's own preferred inflation gauge, distinct from CPI.
+    nextRelease: { date: 2026-09-30, asOf: 2026-09-06 }
 
   - id: ppi
     label: Producer Price Index (Final Demand)
@@ -48,6 +59,7 @@ events:
     derive: yoy
     unit: "% YoY"
     sourceUrl: https://www.bls.gov/ppi/
+    nextRelease: { date: 2026-09-10, asOf: 2026-09-06 }
 
   - id: unemploymentRate
     label: Unemployment Rate
@@ -58,6 +70,7 @@ events:
     derive: level
     unit: "%"
     sourceUrl: https://www.bls.gov/ces/
+    nextRelease: { date: 2026-10-02, asOf: 2026-09-06 }
 
   - id: nonfarmPayrolls
     label: Nonfarm Payrolls (change)
@@ -68,6 +81,7 @@ events:
     derive: mom_change
     unit: "thousands, MoM"
     sourceUrl: https://www.bls.gov/ces/
+    nextRelease: { date: 2026-10-02, asOf: 2026-09-06 }
 
   - id: fedFundsRate
     label: Federal Funds Effective Rate
@@ -88,6 +102,7 @@ events:
     derive: level
     unit: "$B, nominal, annualized"
     sourceUrl: https://www.bea.gov/data/gdp/gross-domestic-product
+    nextRelease: { date: 2026-10-29, asOf: 2026-09-06 }
 
   - id: retailSales
     label: Retail Sales
@@ -98,6 +113,7 @@ events:
     derive: level
     unit: "$M"
     sourceUrl: https://www.census.gov/retail/index.html
+    nextRelease: { date: 2026-09-16, asOf: 2026-09-06 }
 
   - id: consumerSentiment
     label: Consumer Sentiment (University of Michigan)
@@ -108,6 +124,7 @@ events:
     derive: level
     unit: index
     sourceUrl: https://www.sca.isr.umich.edu/
+    nextRelease: { date: 2026-09-25, asOf: 2026-09-06 }
 
   - id: fomc
     label: FOMC Meeting & Rate Decision

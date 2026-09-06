@@ -47,13 +47,19 @@ chart is a cost this page has not earned yet. So "what happened after" is
 answered honestly with what is actually collected: the 2-year and 10-year
 Treasury yield before and after each event, not a made-up equity return.
 
-**A precise next date exists for some events and not others.** The Fed
-publishes its meeting calendar a year or more in advance, so the next FOMC
-date is exact. CPI, PPI, jobs, and GDP are not: BLS/BEA announce the *exact*
-date about a month ahead, not a year, so this page states the release
-*frequency* and the *last* actual date rather than fabricating a precise next
-date it cannot back — the same discipline `SYS-7` already applies to a missing
-metric.
+**Every event's next date is sourced, not computed.** FRED and Treasury carry
+no field for "when does the next one come out" — that only exists on each
+issuing agency's own release-schedule page. So `nextRelease` on a non-FOMC
+event, like the FOMC `meetingCalendar`, is hand-curated from that agency's own
+published schedule (BLS for CPI/PPI/jobs, BEA for GDP/PCE, Census for retail
+sales, the University of Michigan for its own survey), dated with the same
+`asOf` discipline `MOD-24` already applies to `reference.yaml`. The FOMC
+calendar covers a full year and self-advances; a `nextRelease` covers exactly
+one upcoming date and goes stale the day after it passes, which is why it is
+tracked in [SPEC.md](SPEC.md)'s conformance table as needing a periodic
+hand-refresh rather than assumed to stay correct on its own — fabricating a
+formulaic rule instead ("second Tuesday of the month") was rejected because
+these schedules shift for holidays and do not actually follow one.
 
 ## Requirements
 
@@ -119,10 +125,10 @@ metric.
   (`UI-1`).
 - **MAC-12** `MUST` `manual` — Each event shows its label, agency, category,
   frequency, and last reported date and value. An event with a hand-curated
-  meeting calendar (FOMC) also shows the next known meeting date; an event
-  without one states the frequency in words rather than asserting a specific
-  next date it does not actually know — a stated frequency is not a promise,
-  and the page must not read as one (`SYS-7`).
+  next date — the FOMC meeting calendar, or a non-FOMC event's `nextRelease`
+  — shows it; an event with neither (the fed funds rate, a daily reading with
+  no single release day) states only the frequency rather than asserting a
+  next date it does not actually know (`SYS-7`).
 - **MAC-13** `MUST` `manual` — The current Treasury yield curve (all
   maturities collected) renders as one snapshot, separate from the
   per-event bond reaction table.
@@ -132,6 +138,16 @@ metric.
 - **MAC-15** `MUST` `build` — The page builds and renders with no
   `data/macro.json` present, the same way every other page tolerates a
   fresh clone before the collector has ever run (`UI-2`, `MOD-15`).
+- **MAC-16** `MUST` `test` — Each non-FOMC event shows its last five reported
+  points, not only the latest one — one point is a fact, five is enough to
+  see a direction, and a reader asking "is this getting better or worse"
+  should not have to leave the page to find out.
+- **MAC-17** `MUST` `manual` — A non-FOMC event's `nextRelease` — the single
+  next known date and the `asOf` it was checked against the issuing agency's
+  own schedule — is hand-curated in `data/macro-events.yaml`, the same
+  discipline `MAC-2` already applies to the FOMC calendar. A series with no
+  fixed announced release day (the fed funds rate) carries no `nextRelease`
+  rather than an invented one.
 
 ## Known gaps
 
@@ -141,10 +157,11 @@ benchmark prices, so "what happened to stocks" after an event is not answered
 on this page. Adding it is a real feature, not a bug fix, and needs its own
 spec decision if a suitable free data source is found.
 
-**A precise next date for non-FOMC events is not computed from anything.**
-BLS/BEA release exact dates roughly a month ahead through their own
-economic-release calendars, which this page does not fetch. The frequency
-text is the honest substitute until that changes.
+**A non-FOMC `nextRelease` date is a single hand-typed value, not a
+self-advancing calendar.** Unlike the FOMC's full-year list, each of these
+covers exactly one upcoming date and goes stale the day after it passes —
+see `MAC-17` and the `SPEC.md` conformance table entry tracking the need for
+a periodic hand-refresh against each agency's own schedule.
 
 ## Notes
 

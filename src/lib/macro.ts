@@ -62,6 +62,13 @@ export function latest(points: MacroSeriesPoint[]): MacroSeriesPoint | undefined
   return points.length > 0 ? points[points.length - 1] : undefined;
 }
 
+/** The most recent `n` points, oldest first — one point of context is not a
+ *  trend (MAC-16). Never throws on a series shorter than `n`; it just
+ *  returns what there is. */
+export function lastN(points: MacroSeriesPoint[], n: number): MacroSeriesPoint[] {
+  return points.slice(Math.max(0, points.length - n));
+}
+
 type YieldKey = Exclude<keyof MacroYieldPoint, 'date'>;
 
 /** Treasury's CSV header text for each maturity this page shows. Matched by

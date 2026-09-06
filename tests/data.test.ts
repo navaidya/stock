@@ -76,6 +76,23 @@ describe('macro event calendar', () => {
       expect(['yoy', 'mom_change', 'level']).toContain(event.derive);
     }
   });
+
+  it('[MAC-17] a non-fomc event with a nextRelease carries a valid date and asOf', () => {
+    for (const event of loadMacroEvents().filter((e) => e.id !== 'fomc')) {
+      if (!event.nextRelease) continue; // fedFundsRate has no fixed release day
+      expect(event.nextRelease.date, `${event.id} nextRelease.date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(event.nextRelease.asOf, `${event.id} nextRelease.asOf`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it('[MAC-17] every monthly-or-faster event except the fed funds rate has a nextRelease', () => {
+    // The fed funds rate is a daily reading with no single "release day," so
+    // it is the one deliberate exception (MAC-12).
+    const missing = loadMacroEvents()
+      .filter((e) => e.id !== 'fomc' && e.id !== 'fedFundsRate' && !e.nextRelease)
+      .map((e) => e.id);
+    expect(missing, `events missing nextRelease: ${missing.join(', ')}`).toEqual([]);
+  });
 });
 
 describe('loadMacroData [MAC-15]', () => {

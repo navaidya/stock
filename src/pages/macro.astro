@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import { loadMacroData, loadMacroEvents } from '../lib/data.ts';
 import {
   formatMacroValue,
+  lastN,
   latest,
   nextMeetingDate,
   pastMeetingDates,
@@ -24,18 +25,34 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 const CATEGORY_ORDER = ['policy', 'inflation', 'labor', 'growth', 'consumer'];
 
+const HISTORY_LENGTH = 5;
+
 const rows = events.map((event) => {
   if (event.id === 'fomc') {
     const dates = event.meetingCalendar?.dates ?? [];
+    // No per-meeting numeric value to show history of here — the FOMC section
+    // below already tables the last six decisions against Treasury yields,
+    // which is the more informative history for a meeting rather than a
+    // series point.
     return {
       event,
       lastDate: pastMeetingDates(dates, today)[0],
       lastValue: undefined as number | undefined,
       nextDate: nextMeetingDate(dates, today),
+      history: [] as Array<{ date: string; value: number }>,
     };
   }
-  const last = latest(macro.series[event.id] ?? []);
-  return { event, lastDate: last?.date, lastValue: last?.value, nextDate: undefined };
+  const series = macro.series[event.id] ?? [];
+  const last = latest(series);
+  return {
+    event,
+    lastDate: last?.date,
+    lastValue: last?.value,
+    nextDate: event.nextRelease?.date,
+    // Oldest-first, matching the series' own order, so the most recent
+    // reading is the one nearest the "Next" line below it.
+    history: lastN(series, HISTORY_LENGTH),
+  };
 });
 
 const grouped = CATEGORY_ORDER.map((category) => ({
@@ -83,7 +100,7 @@ const fmtChange = (v: number | undefined) =>
       <section>
         <h2>{group.category}</h2>
         <div class="cards">
-          {group.rows.map(({ event, lastDate, lastValue, nextDate }) => (
+          {group.rows.map(({ event, lastDate, lastValue, nextDate, history }) => (
             <article class="card">
               <h3>{event.label}</h3>
               <p class="meta">
@@ -99,7 +116,22 @@ const fmtChange = (v: number | undefined) =>
                   </>
                 )}
               </p>
-              {nextDate && <p class="next">Next: {shortDate(nextDate)}</p>}
+              {nextDate && (
+                <p class="next">
+                  Next: {shortDate(nextDate)}
+                  {event.nextRelease && <span class="asof"> (as of {event.nextRelease.asOf})</span>}
+                </p>
+              )}
+              {history.length > 1 && (
+                <ul class="history">
+                  {[...history].reverse().map((point) => (
+                    <li>
+                      <span class="hdate">{shortDate(point.date)}</span>
+                      <span class="hvalue">{formatMacroValue(point.value, event.unit)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {event.note && <p class="note">{event.note}</p>}
               <p class="source">
                 <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">
@@ -211,6 +243,15 @@ const fmtChange = (v: number | undefined) =>
     .card .asof { color: var(--muted); font-size: 0.8rem; }
     .card .next { color: var(--accent); font-size: 0.82rem; margin: 0 0 0.2rem; }
     .card .note { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.4rem; }
+    .card .history {
+      list-style: none;
+      margin: 0.4rem 0;
+      padding: 0.3rem 0 0;
+      border-top: 1px solid var(--line);
+      font-size: 0.78rem;
+    }
+    .card .history li { display: flex; justify-content: space-between; padding: 0.1rem 0; }
+    .card .history .hdate { color: var(--muted); }
     .card .source { margin: 0.4rem 0 0; font-size: 0.78rem; }
     .card .source a { color: var(--accent); }
 

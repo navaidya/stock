@@ -2,10 +2,14 @@ name: Refresh macro data
 
 on:
   schedule:
-    # Once a day. Every tracked series is monthly or slower except the fed
-    # funds rate and Treasury yields, so there is nothing to gain from a
-    # faster cadence (MAC-3).
-    - cron: '0 12 * * 1-5'
+    # Once a day, weekdays, at 15:00 UTC — 11:00 ET (EDT) / 10:00 ET (EST).
+    # Every tracked release BLS/BEA/Census publishes lands at 8:30am ET, and
+    # the University of Michigan's is by 10:00am ET; this runs safely after
+    # all of them so a same-day release is picked up on the very next run
+    # rather than the following day (MAC-3, MAC-17). Every series is monthly
+    # or slower, so once a day is still enough — there is nothing to gain
+    # from checking more often on days nothing was scheduled to publish.
+    - cron: '0 15 * * 1-5'
   workflow_dispatch:
 
 permissions:

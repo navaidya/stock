@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   deriveSeries,
   formatMacroValue,
+  lastN,
   latest,
   mapFredObservations,
   monthOverMonthChange,
@@ -90,6 +91,22 @@ describe('latest', () => {
 
   it('is undefined for an empty series', () => {
     expect(latest([])).toBeUndefined();
+  });
+});
+
+describe('lastN [MAC-16]', () => {
+  const points = Array.from({ length: 8 }, (_, i) => ({ date: `2026-0${i + 1}-01`, value: i }));
+
+  it('returns the last n points, oldest first', () => {
+    expect(lastN(points, 5)).toEqual(points.slice(3));
+  });
+
+  it('returns everything, not an error, when n exceeds the series length', () => {
+    expect(lastN(points, 100)).toEqual(points);
+  });
+
+  it('returns an empty array for an empty series', () => {
+    expect(lastN([], 5)).toEqual([]);
   });
 });
 

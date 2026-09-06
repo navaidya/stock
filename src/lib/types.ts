@@ -113,9 +113,9 @@ export interface UniverseEntry {
 }
 
 /** One tracked macro event, as hand-curated in data/macro-events.yaml
- *  (`MAC-1`, `MAC-2`). `fredSeries` is `null` for the one event with no FRED
- *  series — FOMC, which carries its own hand-curated `meetingCalendar`
- *  instead. */
+ *  (`MAC-1`, `MAC-2`, `MAC-17`). `fredSeries` is `null` for the one event
+ *  with no FRED series — FOMC, which carries its own hand-curated
+ *  `meetingCalendar` instead. */
 export interface MacroEvent {
   id: string;
   label: string;
@@ -127,6 +127,12 @@ export interface MacroEvent {
   unit?: string;
   sourceUrl: string;
   note?: string;
+  /** The single next known release date, read off the issuing agency's own
+   *  published schedule — not computed or guessed from the frequency text
+   *  (MAC-17). Goes stale after that date passes and needs hand-refreshing
+   *  against the source, the same discipline `MOD-24` applies to
+   *  reference.yaml. Absent for a series with no fixed announced schedule. */
+  nextRelease?: { date: string; asOf: string };
   meetingCalendar?: { asOf: string; dates: string[] };
 }
 
