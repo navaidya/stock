@@ -232,6 +232,15 @@ export const glossary: Record<string, GlossaryEntry> = {
       'This is not a rank and not a recommendation. It says nothing about price, so a financially strong company trading at an extreme valuation scores the same as one trading cheaply — expensive-and-sound and cheap-and-sound are indistinguishable here, on purpose. It also says nothing about growth or momentum. A company can improve its score by paying down debt or expanding margins and still be a bad time to buy for reasons entirely outside these five numbers. Sort this column like any other if you want to see who ranks where today — the dashboard will not tell you which end of that sort matters to you.',
   },
 
+  analystRatings: {
+    term: 'Analyst ratings',
+    group: 'Financial health and credit',
+    what: 'Raw sell-side analyst rating counts for the most recent month Finnhub has data for — Strong Buy, Buy, Hold, Sell, Strong Sell — shown exactly as reported, with zero-count buckets omitted. Never averaged, weighted, or combined into one number. Sorting this column orders by total number of analysts covering the name, not by how bullish they are.',
+    why: 'Third-party opinion shown as a fact, the same way a credit rating is — this dashboard did not compute it and is not endorsing it.',
+    watch:
+      'Analyst ratings are, by definition, buy/sell recommendations, and the data behind them is more biased than it looks. Sell ratings are rare industry-wide — roughly 45% Buy, 45% Hold, 10% Sell — not because few stocks deserve one, but because issuing one costs an analyst access to company management. Ratings also skew positive when the covered company is an investment-banking client of the analyst\'s own firm: one study found a client stock is roughly 62% likely to be rated Buy versus 54% for a non-client, and about 1% likely to be rated Sell versus 5% for a non-client. A wall of "Buy" here is partly a structural feature of how this data gets made, not necessarily a verdict on the company — and averaging more analysts together does not fix this, because the bias is shared across most of them, not random noise that a bigger sample cancels out. This is not this dashboard\'s opinion, and it is not a recommendation to act on.',
+  },
+
   dividendYield: {
     term: 'Dividend yield',
     group: 'Income',

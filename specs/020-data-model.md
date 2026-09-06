@@ -72,9 +72,10 @@ specification — the arithmetic is the easy part.
 - **MOD-6** `MUST` `test` — For an entry marked `isEtf`, company-only metrics
   are stripped or never computed: P/E, forward P/E, PEG, P/S, gross and
   operating margin, ROE, revenue and EPS growth, D/E, current ratio, EV/FCF,
-  FCF yield, next earnings date, and Financial Health score. Finnhub returns
-  nonsense for most of these on a fund rather than omitting them; earnings date
-  and health score simply do not apply to one.
+  FCF yield, next earnings date, Financial Health score, and analyst ratings.
+  Finnhub returns nonsense for most of these on a fund rather than omitting
+  them; earnings date, health score, and analyst ratings simply do not apply
+  to one.
 
 ### Financial Health score
 
@@ -105,6 +106,30 @@ the right side of that line.
   computed once, deterministically, from collected fields — no model, no
   judgment applied at render time — and must never be presented as a signal of
   whether now is a good time to buy (`SYS-5`).
+
+### Analyst ratings
+
+Sell-side analyst recommendations are, unlike everything else `healthScore`
+draws on, themselves buy/sell recommendations — the thing `SYS-5` exists to
+keep off this dashboard. They are shown anyway, as a second narrow exception
+alongside the Health score, on the same terms a credit rating already is:
+raw third-party opinion, dated and sourced, never synthesized into anything
+this dashboard presents as its own judgment. See `030-presentation.md`
+`UI-51`..`UI-54` for the presentation constraints that hold this boundary.
+
+- **MOD-34** `MUST` `test` — `analystRatings` is the most recent month's
+  Strong Buy/Buy/Hold/Sell/Strong Sell counts, taken from the entry with the
+  latest `period` among those Finnhub returns — never an average, a weighted
+  score, or a count synthesized across months.
+- **MOD-35** `MUST` `test` — A month's entry is used only when its period and
+  every one of its five counts parses as a number. A partially-malformed
+  entry is dropped entirely rather than rendering with some counts real and
+  others silently defaulted to zero, which would understate coverage
+  (`SYS-7`). A genuine `0` Finnhub actually reports for a bucket is kept as
+  a real count, not treated as missing.
+- **MOD-36** `MUST` `manual` — `analystRatings` is undefined for ETFs and for
+  a symbol with no analyst coverage that month, the same absence-over-zero
+  discipline every other metric on this page follows.
 
 ### Calendar and activity
 

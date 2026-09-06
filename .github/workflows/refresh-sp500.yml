@@ -3,7 +3,7 @@ name: Refresh S&P 500 data
 on:
   schedule:
     # Once a day. ~500 symbols at the free-tier pace take on the order of
-    # 35-40 minutes (COL-3), so this runs far less often than the watchlist
+    # 45-50 minutes (COL-3, COL-25), so this runs far less often than the watchlist
     # refresh rather than joining it and stretching every scheduled run.
     - cron: '0 11 * * 1-5'
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           ./scripts/commit-data.sh data/sp500.json 'chore: refresh S&P 500 data'
-      # This run takes ~35-40 minutes, long enough for refresh-data.yml to land
+      # This run takes ~45-50 minutes, long enough for refresh-data.yml to land
       # a commit on main first — a plain push then gets rejected as non-fast-
       # forward and the whole collection is lost (COL-24). The two workflows
       # never touch the same file, so rebasing onto whatever landed is always

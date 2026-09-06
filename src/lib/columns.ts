@@ -1,6 +1,8 @@
 import type { StockSnapshot } from './types.ts';
 import {
   EMPTY,
+  analystCoverage,
+  analystRatings,
   marketCap,
   money,
   num,
@@ -101,6 +103,23 @@ const healthColumn: Column = {
   label: 'Health',
   help: 'Profitability and balance-sheet stability, 0-100. Excludes valuation, growth and momentum entirely — see the FAQ for the formula. Not a recommendation',
   render: (s) => num(s.healthScore, 0),
+};
+
+/** Raw sell-side analyst rating counts for the most recent month covered,
+ *  shown exactly as Finnhub reports them — never averaged, weighted, or
+ *  turned into a single "consensus" number (UI-51, UI-52). This is
+ *  third-party opinion presented as a fact, the same as the credit rating
+ *  column, but it needs a caveat that one does not: an analyst rating *is*
+ *  a buy/sell recommendation, and the FAQ discloses the well-documented
+ *  biases in this data before a reader treats a wall of "Buy" as a verdict
+ *  (`SYS-5`). */
+const analystRatingColumn: Column = {
+  key: 'analystRatings',
+  label: 'Analysts',
+  help: 'Sell-side analyst rating counts for the most recent month covered — Strong Buy/Buy/Hold/Sell/Strong Sell, raw and unweighted. This data has well-documented biases — see the FAQ before reading it as a verdict. Not this dashboard\'s opinion',
+  render: (s) => analystRatings(s.analystRatings),
+  // Sorts by breadth of coverage, not sentiment — see analystCoverage's doc.
+  sort: (s) => analystCoverage(s.analystRatings),
 };
 
 const identity: Column[] = [
@@ -238,6 +257,7 @@ export const homeColumns: Column[] = [
   creditRatingColumn,
   volumeColumn,
   healthColumn,
+  analystRatingColumn,
   {
     key: 'dividendYield',
     label: 'Yield',

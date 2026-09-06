@@ -204,13 +204,18 @@ Most columns answer "what is this worth", which changes slowly. These two answer
   any ordering that implies investment quality (SYS-5). Sorting by a single
   stated metric — yield, market cap — is presenting data and is permitted;
   sorting by an aggregate 'attractiveness' is not."
-- **UI-45** `MUST` `manual` — No page renders a buy/sell recommendation, a
-  price target, or any ordering that implies investment quality, with exactly
-  one exception: the Financial Health score, admitted only because UI-46
-  through UI-48 hold. Sorting by any single stated metric remains permitted, as
-  under the original `UI-9`; the boundary this requirement protects is against
-  a *second* composite, or against loosening the constraints on the first one
-  (`SYS-5`).
+- **UI-45** `MUST` `manual` — No page renders a buy/sell recommendation that
+  is *this dashboard's own* — a price target, a composite score, or any
+  ordering that implies this dashboard's judgment of investment quality —
+  with exactly one exception: the Financial Health score, admitted only
+  because `UI-46` through `UI-48` hold. Sorting by any single stated metric
+  remains permitted, as under the original `UI-9`; the boundary this
+  requirement protects is against a *second self-generated composite*, or
+  against loosening the constraints on the first one (`SYS-5`). Analyst
+  ratings (`UI-51`..`UI-54`) are a separate case: third-party recommendations
+  reported as a fact, never synthesized by this dashboard into one number —
+  the same category `MOD-24`'s credit rating already occupies, not a second
+  instance of what this requirement bans.
 - **UI-46** `MUST` `build` — The Financial Health score's formula — every
   component, its clamp range, and the minimum-components rule — is stated in
   full on `/faq`, matching `src/lib/health.ts` exactly. A composite metric
@@ -225,6 +230,29 @@ Most columns answer "what is this worth", which changes slowly. These two answer
   "invest now" — for the Financial Health score. The FAQ states plainly that
   it excludes valuation, growth and momentum, and that it is not advice about
   whether now is a good time to buy (`MOD-33`).
+- **UI-51** `MUST` `manual` — The analyst rating column shows the raw Strong
+  Buy/Buy/Hold/Sell/Strong Sell counts for the most recent month covered,
+  exactly as reported, with zero-count buckets omitted for readability. It is
+  never averaged, weighted, or reduced to a single "consensus" number —
+  `MOD-34` computes "most recent," nothing more.
+- **UI-52** `MUST` `test` — The column sorts by total analyst coverage (the
+  sum of all five counts), never by a bullish-weighted score. Coverage
+  breadth is a fact about how much attention a name gets; a sentiment score
+  computed from the same counts would be exactly the self-generated
+  composite `UI-45` exists to keep off this dashboard.
+- **UI-53** `MUST` `build` — The FAQ entry for this column states, in
+  substance: sell ratings are rare industry-wide (roughly 45% Buy / 45% Hold
+  / 10% Sell) because issuing one costs an analyst access to company
+  management, ratings skew positive when the covered company is an
+  investment-banking client of the analyst's own firm, and this bias is
+  shared across most analysts rather than random noise that a larger sample
+  would cancel out. A reader must not be able to read a wall of "Buy" here
+  as an unbiased verdict.
+- **UI-54** `MUST` `manual` — Neither the column label, its help text, nor
+  the FAQ entry adds this dashboard's own recommendation vocabulary on top of
+  the reported counts — the counts are the Buy/Sell language, quoted, not the
+  dashboard's. The FAQ states plainly that this is third-party data, not this
+  dashboard's opinion, and not a recommendation to act on (`SYS-5`).
 - **UI-20** `MUST` `manual` — No page displays holdings, position sizes, cost
   basis, or P&L, and no page copy implies the lists represent owned positions
   (see [040-privacy-and-secrets.md](040-privacy-and-secrets.md)).
@@ -238,3 +266,12 @@ contain. The subtitle now says what the list actually is.
 `UI-9` was withdrawn and replaced by `UI-45`..`UI-48` when the Financial Health
 score was added — see [SPEC.md](SPEC.md) §2 for why that one composite was
 judged not to be the thing `SYS-5` exists to prevent.
+
+`UI-45` was amended and `UI-51`..`UI-54` were added when the analyst rating
+column was added — a second, differently-shaped exception (raw third-party
+counts, never a self-generated composite) rather than a second instance of
+the thing `UI-45` bans. Added only after the user explicitly chose the
+scoped "raw counts, clearly non-advice" option over adding it to the Health
+score, having seen research on how biased and non-random this data's errors
+are — see `020-data-model.md`'s "Analyst ratings" section for that
+reasoning.

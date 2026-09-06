@@ -38,7 +38,8 @@ if (TARGET !== 'macro' && !KEY) {
 // Free tier allows 60 calls/minute. The calls for one symbol go out in
 // parallel, so the wait afterwards has to cover all of them — a flat gap
 // between symbols would spend the budget several times over (COL-3).
-const CALLS_PER_SYMBOL = 4;
+// quote, profile, metric, earnings-calendar, recommendation-trends (COL-25).
+const CALLS_PER_SYMBOL = 5;
 const DELAY_MS = symbolDelayMs(CALLS_PER_SYMBOL);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -108,14 +109,28 @@ async function collectEarnings(ticker, today) {
   }
 }
 
+/** Analyst recommendation trends (COL-25). Failure here is swallowed the
+ *  same way collectEarnings' is (COL-19): this is a "nice to have" column,
+ *  not fundamentals, and losing it must never take the rest of the symbol
+ *  down with it. */
+async function collectRecommendation(ticker) {
+  try {
+    return await get('/stock/recommendation', { symbol: ticker });
+  } catch (err) {
+    console.warn(`\n  ${ticker}: no analyst recommendations (${err.message})`);
+    return undefined;
+  }
+}
+
 async function collectOne(entry, today) {
-  const [quote, profile, metrics, earnings] = await Promise.all([
+  const [quote, profile, metrics, earnings, recommendation] = await Promise.all([
     get('/quote', { symbol: entry.ticker }),
     get('/stock/profile2', { symbol: entry.ticker }),
     get('/stock/metric', { symbol: entry.ticker, metric: 'all' }),
     collectEarnings(entry.ticker, today),
+    collectRecommendation(entry.ticker),
   ]);
-  return mapToSnapshot({ ...entry, quote, profile, metrics, earnings, today });
+  return mapToSnapshot({ ...entry, quote, profile, metrics, earnings, recommendation, today });
 }
 
 const FRED_KEY = process.env.FRED_API_KEY;

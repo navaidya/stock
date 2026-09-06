@@ -48,6 +48,12 @@ metric as normal rather than exceptional.
   the calendar is the one endpoint here that free-tier access has historically
   been withdrawn from, and losing it must not blank a row's price and
   fundamentals.
+- **COL-25** `MUST` `manual` — Analyst recommendation trends are fetched per
+  symbol as a fifth parallel call, the same way the earnings calendar is
+  (`COL-18`). A failure of this call alone degrades to no analyst rating data
+  for that symbol rather than failing it (`COL-19`'s reasoning applies
+  identically): the column this feeds is the least essential thing collected,
+  and losing it must never blank a row's price and fundamentals.
 - **COL-9** `SHOULD` `ci` — The schedule is weekdays at 14:35, 18:35 and 21:15
   UTC: twice during US market hours and once after the close.
 
@@ -76,9 +82,9 @@ second collector is drift between the two, not extra code.
   only file that touches the network for either target.
 - **COL-22** `MUST` `manual` — The S&P 500 target refreshes on its own
   schedule (`refresh-sp500.yml`), separate from `refresh-data.yml`, because
-  roughly 500 symbols takes on the order of 35-40 minutes at the free-tier
-  pace (`COL-3`) — folding it into the three-times-daily refresh would
-  stretch every scheduled run to match its slowest target.
+  roughly 500 symbols takes on the order of 45-50 minutes at the free-tier
+  pace (`COL-3`, `COL-25`) — folding it into the three-times-daily refresh
+  would stretch every scheduled run to match its slowest target.
 - **COL-23** `MUST` `test` — `data/sp500.yaml` parses, is non-empty, and
   contains no duplicate tickers, mirroring `COL-8` for the third curated
   list.

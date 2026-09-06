@@ -55,11 +55,16 @@ one of them is a change to this spec, not a feature.
 - **Portfolio tracking** — holdings, position sizes, cost basis, or P&L. See
   [040-privacy-and-secrets.md](040-privacy-and-secrets.md).
 - **Recommendations, scores, or rankings by investment quality.** See `SYS-5`.
-  One narrow, deliberate exception: the Financial Health score is a single
+  Two narrow, deliberate exceptions. The Financial Health score is a single
   disclosed composite of profitability and balance-sheet stability, excluding
-  valuation, growth and momentum by construction, never rendered as an ordinal
-  rank. See `030-presentation.md` `UI-45`..`UI-48` for the constraints that
-  keep it on the data side of this line rather than the advice side.
+  valuation, growth, momentum and external ratings by construction, never
+  rendered as an ordinal rank — see `030-presentation.md` `UI-45`..`UI-48`.
+  Analyst ratings are the second: raw sell-side Buy/Hold/Sell counts, shown
+  as third-party fact the same way a credit rating is, never averaged into a
+  consensus number or synthesized by this dashboard into anything resembling
+  the first exception — see `UI-51`..`UI-54`, and `020-data-model.md`'s
+  "Analyst ratings" section for why this data's own well-documented bias
+  makes it a case *for* extra caveats, not for silence.
 - **Backtesting, charting, or historical time-series storage.** The system
   stores one current snapshot, not a history. One narrow, deliberate
   exception: `data/macro.json` mirrors the complete published history of a
@@ -188,6 +193,7 @@ empty list is the goal, not the assumption.
 | **RPO** | Remaining performance obligation: contracted revenue not yet recognised. A backlog figure, disclosed quarterly in the filings. |
 | **Brief** | The machine-written summary of one collection, in `data/brief.json`. Describes the data; never advises. |
 | **Financial Health score** | A 0–100 composite of profitability and balance-sheet stability only — see `src/lib/health.ts` and `020-data-model.md` `MOD-31`..`MOD-33`. The one exception to the no-composite-scores rule; never a ranking, never advice. |
+| **Analyst ratings** | Raw sell-side Strong Buy/Buy/Hold/Sell/Strong Sell counts for the most recent month covered, shown as third-party fact — never averaged into a consensus number. The second, differently-shaped exception to the no-recommendations rule; see `020-data-model.md` `MOD-34`..`MOD-36` and `030-presentation.md` `UI-51`..`UI-54`. |
 | **Stale** | Data older than 24 hours, or never collected. Surfaced in the UI, never hidden. |
 | **Free tier** | Finnhub's no-cost plan: 60 calls/minute, and an unpredictable subset of metrics per symbol. |
 | **Macro event** | A recurring scheduled economic release or Fed decision tracked on `/macro` — see `070-macro-events.md` `MAC-1`, `MAC-2`. |

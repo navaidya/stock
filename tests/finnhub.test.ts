@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { mapToSnapshot, pick, toNum } from '../src/lib/finnhub.ts';
+import { latestRecommendation, mapToSnapshot, pick, toNum } from '../src/lib/finnhub.ts';
 
 const fixture = JSON.parse(
   readFileSync(join(process.cwd(), 'tests/fixtures/finnhub-nvda.json'), 'utf8'),
@@ -105,5 +105,79 @@ describe('mapToSnapshot [MOD-7]', () => {
     expect(etf.peTTM).toBeUndefined();
     expect(etf.grossMargin).toBeUndefined();
     expect(etf.roe).toBeUndefined();
+  });
+
+  it('[MOD-34] maps the most recent month of analyst ratings', () => {
+    const snap = mapToSnapshot({
+      ticker: 'NVDA',
+      name: 'NVIDIA',
+      recommendation: [
+        { period: '2026-07-01', strongBuy: 20, buy: 18, hold: 2, sell: 0, strongSell: 0 },
+        { period: '2026-08-01', strongBuy: 22, buy: 19, hold: 1, sell: 0, strongSell: 0 },
+      ],
+    });
+    expect(snap.analystRatings).toEqual({
+      period: '2026-08-01',
+      strongBuy: 22,
+      buy: 19,
+      hold: 1,
+      sell: 0,
+      strongSell: 0,
+    });
+  });
+
+  it('[MOD-36] leaves analystRatings undefined for an ETF, even with data present', () => {
+    const etf = mapToSnapshot({
+      ticker: 'VOO',
+      name: 'Vanguard S&P 500 ETF',
+      isEtf: true,
+      recommendation: [{ period: '2026-08-01', strongBuy: 1, buy: 1, hold: 0, sell: 0, strongSell: 0 }],
+    });
+    expect(etf.analystRatings).toBeUndefined();
+  });
+
+  it('[MOD-36] leaves analystRatings undefined with no recommendation data', () => {
+    const bare = mapToSnapshot({ ticker: 'XYZ', name: 'Test' });
+    expect(bare.analystRatings).toBeUndefined();
+  });
+});
+
+describe('latestRecommendation [MOD-34, MOD-35]', () => {
+  it('picks the entry with the latest period, regardless of array order', () => {
+    const result = latestRecommendation([
+      { period: '2026-06-01', strongBuy: 1, buy: 1, hold: 1, sell: 1, strongSell: 1 },
+      { period: '2026-08-01', strongBuy: 5, buy: 5, hold: 5, sell: 5, strongSell: 5 },
+      { period: '2026-07-01', strongBuy: 2, buy: 2, hold: 2, sell: 2, strongSell: 2 },
+    ]);
+    expect(result?.period).toBe('2026-08-01');
+    expect(result?.strongBuy).toBe(5);
+  });
+
+  it('[SYS-7] keeps a genuine zero count, distinct from a missing one', () => {
+    const result = latestRecommendation([
+      { period: '2026-08-01', strongBuy: 0, buy: 0, hold: 0, sell: 0, strongSell: 0 },
+    ]);
+    expect(result).toEqual({ period: '2026-08-01', strongBuy: 0, buy: 0, hold: 0, sell: 0, strongSell: 0 });
+  });
+
+  it('[MOD-35] drops an entry with any unparseable count rather than defaulting it to zero', () => {
+    const result = latestRecommendation([
+      { period: '2026-08-01', strongBuy: 5, buy: 5, hold: 5, sell: null, strongSell: 5 } as any,
+      { period: '2026-07-01', strongBuy: 2, buy: 2, hold: 2, sell: 2, strongSell: 2 },
+    ]);
+    // The malformed August entry is dropped entirely; July, being complete, wins.
+    expect(result?.period).toBe('2026-07-01');
+  });
+
+  it('[MOD-35] drops an entry with an unparseable period', () => {
+    const result = latestRecommendation([
+      { period: 'not-a-date', strongBuy: 5, buy: 5, hold: 5, sell: 5, strongSell: 5 } as any,
+    ]);
+    expect(result).toBeUndefined();
+  });
+
+  it('returns undefined for missing or empty input', () => {
+    expect(latestRecommendation(undefined)).toBeUndefined();
+    expect(latestRecommendation([])).toBeUndefined();
   });
 });

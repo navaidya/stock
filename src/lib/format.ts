@@ -1,6 +1,8 @@
 /** Display helpers. Every one must survive undefined, because the free API tier
  *  omits metrics unpredictably and a blank cell is better than a broken page. */
 
+import type { AnalystRatings } from './types.ts';
+
 export const EMPTY = '—';
 
 function isNum(v: number | undefined | null): v is number {
@@ -57,4 +59,30 @@ export function signedPct(v: number | undefined, digits = 2): string {
   if (!isNum(v)) return EMPTY;
   const sign = v > 0 ? '+' : '';
   return `${sign}${v.toFixed(digits)}%`;
+}
+
+/** Strong Buy through Strong Sell, in that fixed order — never re-sorted by
+ *  count, which would read as "here is the verdict" rather than "here is the
+ *  raw breakdown" (UI-52). A bucket with zero analysts in it is omitted, not
+ *  shown as "0", to keep the cell readable when coverage is thin. */
+const ANALYST_BUCKETS: Array<[keyof Omit<AnalystRatings, 'period'>, string]> = [
+  ['strongBuy', 'SB'],
+  ['buy', 'B'],
+  ['hold', 'H'],
+  ['sell', 'S'],
+  ['strongSell', 'SS'],
+];
+
+export function analystRatings(r: AnalystRatings | undefined): string {
+  if (!r) return EMPTY;
+  const parts = ANALYST_BUCKETS.filter(([key]) => r[key] > 0).map(([key, abbrev]) => `${r[key]}${abbrev}`);
+  return parts.length > 0 ? parts.join(' · ') : '0 analysts';
+}
+
+/** Total analysts covering the name that month — a coverage-breadth number,
+ *  not a sentiment score. This is deliberately what the column sorts on
+ *  instead of a bullish-weighted composite (UI-52, SYS-5). */
+export function analystCoverage(r: AnalystRatings | undefined): number | undefined {
+  if (!r) return undefined;
+  return r.strongBuy + r.buy + r.hold + r.sell + r.strongSell;
 }

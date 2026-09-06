@@ -1,6 +1,6 @@
 import { isoDate } from './dates.ts';
 import { computeHealthScore } from './health.ts';
-import type { StockSnapshot } from './types.ts';
+import type { AnalystRatings, StockSnapshot } from './types.ts';
 
 /** Pure mapping from Finnhub's raw responses to our snapshot shape.
  *
@@ -35,6 +35,18 @@ export interface FinnhubEarningsResponse {
     year?: number;
   }>;
 }
+
+/** One month's analyst recommendation trend, as Finnhub returns it — an
+ *  array with one of these per recent month, not sorted in any guaranteed
+ *  order (COL-25). */
+export type FinnhubRecommendation = Array<{
+  period?: string;
+  strongBuy?: number;
+  buy?: number;
+  hold?: number;
+  sell?: number;
+  strongSell?: number;
+}>;
 
 /** Milliseconds to wait after finishing one symbol, given how many calls that
  *  symbol cost. The free tier allows 60 calls a minute, and the calls for a
@@ -81,6 +93,40 @@ export function nextEarnings(
   };
 }
 
+/** The most recent month's analyst recommendation counts, or undefined when
+ *  there is no usable entry. An entry is used only when every count and the
+ *  period itself parse — a partially-malformed month must not render as
+ *  three real counts and two silent zeros, which would misstate coverage
+ *  (MOD-35, SYS-7). A genuine `0` from Finnhub (say, zero Sell ratings) is
+ *  not "missing" and is kept as-is — the free tier reports these as real
+ *  counts, unlike the metrics endpoint's habit of omitting a field it has no
+ *  value for. */
+export function latestRecommendation(
+  recommendation: FinnhubRecommendation | undefined,
+): AnalystRatings | undefined {
+  const entries = (recommendation ?? [])
+    .map((r) => ({
+      period: isoDate(r?.period),
+      strongBuy: toNum(r?.strongBuy),
+      buy: toNum(r?.buy),
+      hold: toNum(r?.hold),
+      sell: toNum(r?.sell),
+      strongSell: toNum(r?.strongSell),
+    }))
+    .filter(
+      (r): r is AnalystRatings =>
+        r.period !== undefined &&
+        r.strongBuy !== undefined &&
+        r.buy !== undefined &&
+        r.hold !== undefined &&
+        r.sell !== undefined &&
+        r.strongSell !== undefined,
+    )
+    .sort((a, b) => b.period.localeCompare(a.period));
+
+  return entries[0];
+}
+
 /** Coerce to a finite number, or undefined. Finnhub returns null, empty
  *  strings, and occasionally NaN for metrics it has no value for. */
 export function toNum(value: unknown): number | undefined {
@@ -115,6 +161,7 @@ export interface MapInput {
   profile?: FinnhubProfile;
   metrics?: FinnhubMetricResponse;
   earnings?: FinnhubEarningsResponse;
+  recommendation?: FinnhubRecommendation;
   /** Collection date as `YYYY-MM-DD`. Passed in rather than read from a clock,
    *  so the mapping stays pure and testable (MOD-7). */
   today?: string;
@@ -151,6 +198,7 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
       : undefined;
 
   const earnings = nextEarnings(input.earnings, input.today);
+  const analystRatings = input.isEtf ? undefined : latestRecommendation(input.recommendation);
 
   const grossMargin = pick(m, 'grossMarginTTM', 'grossMarginAnnual');
   const operatingMargin = pick(m, 'operatingMarginTTM', 'operatingMarginAnnual');
@@ -205,6 +253,8 @@ export function mapToSnapshot(input: MapInput): StockSnapshot {
     payoutRatio: pick(m, 'payoutRatioTTM', 'payoutRatioAnnual'),
     dividendGrowth5Y: pick(m, 'dividendGrowthRate5Y'),
     fcfYield,
+
+    analystRatings,
   };
 
   // ETFs report a handful of these as nonsense rather than omitting them.

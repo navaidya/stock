@@ -1,3 +1,15 @@
+/** One month's sell-side analyst recommendation counts — raw and unweighted,
+ *  never combined into a single sentiment number (MOD-34). See
+ *  src/lib/finnhub.ts's `latestRecommendation`. */
+export interface AnalystRatings {
+  period: string;
+  strongBuy: number;
+  buy: number;
+  hold: number;
+  sell: number;
+  strongSell: number;
+}
+
 /** A single stock's data after normalization. Every metric is optional: the
  *  free Finnhub tier does not return all of them for all symbols, and a missing
  *  metric must render as an em dash rather than break the page. */
@@ -66,6 +78,17 @@ export interface StockSnapshot {
   payoutRatio?: number;
   dividendGrowth5Y?: number;
   fcfYield?: number;
+
+  /** Raw sell-side analyst rating counts for the most recent month Finnhub
+   *  has data for — never averaged or weighted into one number, never a
+   *  ranking, and undefined for ETFs and for a name with no coverage
+   *  (MOD-34, MOD-35). This is third-party data shown as a fact, the same
+   *  as a credit rating, and it carries the same caveat obligation a credit
+   *  rating does not: analyst ratings are themselves buy/sell
+   *  recommendations, so the FAQ must disclose the well-documented biases in
+   *  this data before a reader treats a wall of "Buy" as a verdict (MOD-36,
+   *  `SYS-5`). */
+  analystRatings?: AnalystRatings;
 
   // Reference: hand-curated, not collected. See data/reference.yaml.
   /** Long-term issuer credit rating, canonical S&P/Fitch spelling. */

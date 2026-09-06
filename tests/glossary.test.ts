@@ -26,3 +26,32 @@ describe('column glossary', () => {
     }
   });
 });
+
+describe('analyst ratings glossary entry [UI-53, UI-54]', () => {
+  const entry = glossary.analystRatings;
+
+  it('exists and states the herding and investment-banking-conflict bias', () => {
+    expect(entry, 'no glossary entry for analystRatings').toBeTruthy();
+    const text = `${entry.what} ${entry.why} ${entry.watch ?? ''}`.toLowerCase();
+    expect(text).toContain('sell');
+    expect(text).toMatch(/investment.bank/);
+    expect(text).toMatch(/bias/);
+  });
+
+  it('[UI-54] never adds this dashboard\'s own recommendation vocabulary', () => {
+    const text = `${entry.what} ${entry.why} ${entry.watch ?? ''}`.toLowerCase();
+    for (const directive of [
+      'you should buy', 'you should sell', 'we recommend', 'best stock', 'top pick', 'invest now',
+    ]) {
+      expect(text, directive).not.toContain(directive);
+    }
+    expect(text, 'should state this is not the dashboard\'s opinion').toMatch(
+      /not this dashboard.s opinion|not a recommendation/,
+    );
+  });
+
+  it('[UI-51] states the counts are never averaged or reduced to a consensus number', () => {
+    const text = `${entry.what} ${entry.why} ${entry.watch ?? ''}`.toLowerCase();
+    expect(text).toMatch(/never averaged|not averaged/);
+  });
+});
