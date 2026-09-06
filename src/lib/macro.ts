@@ -80,10 +80,12 @@ const TREASURY_COLUMNS: Array<[string, YieldKey]> = [
 ];
 
 function splitCsvLine(line: string): string[] {
-  // Every field in this particular CSV is a plain date or number — no
-  // quoting, no embedded commas — so a straight split is exact, not a
-  // simplification of a general CSV parser.
-  return line.split(',').map((cell) => cell.trim());
+  // No field in this particular CSV contains a comma, so a straight split
+  // never misaligns a row — but Treasury does wrap every maturity header in
+  // double quotes ("1 Mo", "10 Yr", ...) while leaving "Date" bare, and a
+  // header lookup against the quoted text would otherwise silently miss
+  // every column except Date (MAC-8, found from a live run's diagnostic).
+  return line.split(',').map((cell) => cell.trim().replace(/^"(.*)"$/, '$1'));
 }
 
 /** `9/5/2026` → `2026-09-05`. Treasury's CSV dates are US month/day/year,

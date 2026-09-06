@@ -94,8 +94,12 @@ describe('latest', () => {
 });
 
 describe('parseTreasuryYieldCsv [MAC-8]', () => {
+  // Treasury quotes every maturity header ("1 Mo", "10 Yr", ...) but leaves
+  // Date bare — confirmed from a live collection run's diagnostic output
+  // after an unquoted fixture masked the bug entirely (every column but
+  // Date silently matched nothing, and only the date-only points shipped).
   const csv = [
-    'Date,1 Mo,2 Mo,3 Mo,1 Yr,2 Yr,5 Yr,10 Yr,30 Yr',
+    'Date,"1 Mo","2 Mo","3 Mo","1 Yr","2 Yr","5 Yr","10 Yr","30 Yr"',
     '9/4/2026,4.10,4.08,4.05,3.90,3.60,4.00,4.25,4.60',
     '9/5/2026,4.12,4.09,4.06,3.92,3.62,4.02,4.27,4.62',
   ].join('\n');
@@ -108,10 +112,22 @@ describe('parseTreasuryYieldCsv [MAC-8]', () => {
     ]);
   });
 
+  it('[regression] parses Treasury\'s actual current header verbatim, quotes and all', () => {
+    // The exact header text a live run logged, including the 1.5-month bill
+    // (added 2025) and every maturity this project does not track.
+    const real = [
+      'Date,"1 Mo","1.5 Month","2 Mo","3 Mo","4 Mo","6 Mo","1 Yr","2 Yr","3 Yr","5 Yr","7 Yr","10 Yr","20 Yr","30 Yr"',
+      '9/4/2026,4.10,4.11,4.08,4.05,4.02,3.95,3.90,3.60,3.50,4.00,4.15,4.25,4.45,4.60',
+    ].join('\n');
+    expect(parseTreasuryYieldCsv(real)).toEqual([
+      { date: '2026-09-04', y1mo: 4.1, y3mo: 4.05, y6mo: 3.95, y1yr: 3.9, y2yr: 3.6, y5yr: 4, y10yr: 4.25, y30yr: 4.6 },
+    ]);
+  });
+
   it('is unaffected by an inserted column it does not recognise', () => {
     // Simulates Treasury adding a maturity this project does not track yet.
     const withExtraColumn = [
-      'Date,1.5 Month,1 Mo,2 Yr,10 Yr',
+      'Date,"1.5 Month","1 Mo","2 Yr","10 Yr"',
       '9/4/2026,4.11,4.10,3.60,4.25',
     ].join('\n');
     expect(parseTreasuryYieldCsv(withExtraColumn)).toEqual([
@@ -121,7 +137,7 @@ describe('parseTreasuryYieldCsv [MAC-8]', () => {
 
   it('sorts oldest to newest regardless of input order', () => {
     const reversed = [
-      'Date,10 Yr',
+      'Date,"10 Yr"',
       '9/5/2026,4.27',
       '9/4/2026,4.25',
     ].join('\n');
@@ -129,8 +145,8 @@ describe('parseTreasuryYieldCsv [MAC-8]', () => {
   });
 
   it('returns nothing for a header with no Date column, or too few lines', () => {
-    expect(parseTreasuryYieldCsv('1 Mo,2 Mo\n1,2')).toEqual([]);
-    expect(parseTreasuryYieldCsv('Date,10 Yr')).toEqual([]);
+    expect(parseTreasuryYieldCsv('"1 Mo","2 Mo"\n1,2')).toEqual([]);
+    expect(parseTreasuryYieldCsv('Date,"10 Yr"')).toEqual([]);
     expect(parseTreasuryYieldCsv('')).toEqual([]);
   });
 });
