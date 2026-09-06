@@ -184,6 +184,15 @@ async function mainMacro() {
       getTreasuryYieldCsv(thisYear),
     ]);
     yields = [...parseTreasuryYieldCsv(prior), ...parseTreasuryYieldCsv(current)];
+    // A parsed date with no maturity fields at all means the header text
+    // Treasury sent did not match anything in TREASURY_COLUMNS — a silent
+    // failure mode otherwise indistinguishable from "no yields today." Warn
+    // loudly with the actual header so a format change is caught, not missed.
+    const yieldless = yields.filter((y) => Object.keys(y).length === 1).length;
+    if (yields.length > 0 && yieldless === yields.length) {
+      console.warn(`Treasury yields: every point parsed with no maturity columns matched.`);
+      console.warn(`  current-year header: ${current.split('\n')[0]}`);
+    }
   } catch (err) {
     failed.push('treasuryYields');
     console.warn(`Treasury yields: ${err.message}`);
