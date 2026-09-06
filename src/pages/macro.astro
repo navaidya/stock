@@ -1,0 +1,226 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadMacroData, loadMacroEvents } from '../lib/data.ts';
+import {
+  formatMacroValue,
+  latest,
+  nextMeetingDate,
+  pastMeetingDates,
+  yieldReactionAround,
+} from '../lib/macro.ts';
+import { shortDate, todayISO } from '../lib/dates.ts';
+import type { MacroYieldPoint } from '../lib/types.ts';
+
+const macro = loadMacroData();
+const events = loadMacroEvents();
+const today = todayISO(Date.now());
+
+const CATEGORY_LABELS: Record<string, string> = {
+  policy: 'Fed policy',
+  inflation: 'Inflation',
+  labor: 'Labor market',
+  growth: 'Growth',
+  consumer: 'Consumer & retail',
+};
+const CATEGORY_ORDER = ['policy', 'inflation', 'labor', 'growth', 'consumer'];
+
+const rows = events.map((event) => {
+  if (event.id === 'fomc') {
+    const dates = event.meetingCalendar?.dates ?? [];
+    return {
+      event,
+      lastDate: pastMeetingDates(dates, today)[0],
+      lastValue: undefined as number | undefined,
+      nextDate: nextMeetingDate(dates, today),
+    };
+  }
+  const last = latest(macro.series[event.id] ?? []);
+  return { event, lastDate: last?.date, lastValue: last?.value, nextDate: undefined };
+});
+
+const grouped = CATEGORY_ORDER.map((category) => ({
+  category: CATEGORY_LABELS[category] ?? category,
+  rows: rows.filter((r) => r.event.category === category),
+})).filter((g) => g.rows.length > 0);
+
+const fomc = events.find((e) => e.id === 'fomc');
+const pastFomcDates = fomc?.meetingCalendar ? pastMeetingDates(fomc.meetingCalendar.dates, today).slice(0, 6) : [];
+const reactions = pastFomcDates.map((date) => yieldReactionAround(macro.yields, date, 3));
+
+const latestYields: MacroYieldPoint | undefined = macro.yields[macro.yields.length - 1];
+const YIELD_COLUMNS: Array<[string, keyof Omit<MacroYieldPoint, 'date'>]> = [
+  ['1 Mo', 'y1mo'],
+  ['3 Mo', 'y3mo'],
+  ['6 Mo', 'y6mo'],
+  ['1 Yr', 'y1yr'],
+  ['2 Yr', 'y2yr'],
+  ['5 Yr', 'y5yr'],
+  ['10 Yr', 'y10yr'],
+  ['30 Yr', 'y30yr'],
+];
+
+const fmtYield = (v: number | undefined) => (v === undefined ? '—' : `${v.toFixed(2)}%`);
+const fmtChange = (v: number | undefined) =>
+  v === undefined ? '—' : `${v > 0 ? '+' : ''}${(v * 100).toFixed(0)} bps`;
+---
+
+<Base
+  title="Macro events"
+  subtitle="Recurring economic reports and Fed decisions, mirrored from FRED and the U.S. Treasury — not this dashboard's own data, and not a prediction of what happens next. See the FAQ for what each figure means and where it comes from."
+  generatedAt={macro.generatedAt}
+>
+  {
+    macro.generatedAt === '' && (
+      <p class="empty">
+        No macro data collected yet. Run <code>npm run collect:macro</code>, or
+        wait for the scheduled refresh.
+      </p>
+    )
+  }
+
+  {
+    grouped.map((group) => (
+      <section>
+        <h2>{group.category}</h2>
+        <div class="cards">
+          {group.rows.map(({ event, lastDate, lastValue, nextDate }) => (
+            <article class="card">
+              <h3>{event.label}</h3>
+              <p class="meta">
+                {event.agency} · {event.frequency}
+              </p>
+              <p class="value">
+                {event.id === 'fomc' ? (
+                  <span>Last decision: {lastDate ? shortDate(lastDate) : '—'}</span>
+                ) : (
+                  <>
+                    <strong>{formatMacroValue(lastValue, event.unit)}</strong>
+                    <span class="asof"> · {lastDate ? shortDate(lastDate) : 'no data yet'}</span>
+                  </>
+                )}
+              </p>
+              {nextDate && <p class="next">Next: {shortDate(nextDate)}</p>}
+              {event.note && <p class="note">{event.note}</p>}
+              <p class="source">
+                <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  {event.agency} source
+                </a>
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+
+  <section>
+    <h2>Treasury yield curve</h2>
+    <p class="lead">
+      The latest published par yield by maturity. One snapshot, not a
+      recommendation about duration or rate direction.
+    </p>
+    {
+      latestYields ? (
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" class="left">As of</th>
+                {YIELD_COLUMNS.map(([label]) => (
+                  <th scope="col">{label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="left">{shortDate(latestYields.date)}</td>
+                {YIELD_COLUMNS.map(([, key]) => (
+                  <td>{fmtYield(latestYields[key])}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="empty">No Treasury yield data collected yet.</p>
+      )
+    }
+  </section>
+
+  <section>
+    <h2>Bond market reaction around FOMC decisions</h2>
+    <p class="lead">
+      The 2-year and 10-year Treasury yield just before each of the last few
+      FOMC decisions, and about three calendar days after. This states a
+      historical fact about Treasury yields — it says nothing about equities,
+      and nothing about what happens around the next decision.
+    </p>
+    {
+      reactions.length > 0 ? (
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" class="left">Decision</th>
+                <th scope="col">2Yr before</th>
+                <th scope="col">2Yr after</th>
+                <th scope="col">Δ 2Yr</th>
+                <th scope="col">10Yr before</th>
+                <th scope="col">10Yr after</th>
+                <th scope="col">Δ 10Yr</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reactions.map((r) => (
+                <tr>
+                  <td class="left">{shortDate(r.eventDate)}</td>
+                  <td>{fmtYield(r.before2yr)}</td>
+                  <td>{fmtYield(r.after2yr)}</td>
+                  <td>{fmtChange(r.change2yr)}</td>
+                  <td>{fmtYield(r.before10yr)}</td>
+                  <td>{fmtYield(r.after10yr)}</td>
+                  <td>{fmtChange(r.change10yr)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="empty">No past FOMC decisions fall within the collected yield history yet.</p>
+      )
+    }
+  </section>
+
+  <style>
+    section { margin-bottom: 2.25rem; }
+    h2 {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .lead { color: var(--muted); font-size: 0.85rem; max-width: 68ch; margin: 0 0 0.75rem; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 0.9rem; }
+    .card h3 { margin: 0 0 0.3rem; font-size: 0.95rem; }
+    .card .meta { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.4rem; }
+    .card .value { margin: 0 0 0.2rem; font-size: 0.95rem; }
+    .card .asof { color: var(--muted); font-size: 0.8rem; }
+    .card .next { color: var(--accent); font-size: 0.82rem; margin: 0 0 0.2rem; }
+    .card .note { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.4rem; }
+    .card .source { margin: 0.4rem 0 0; font-size: 0.78rem; }
+    .card .source a { color: var(--accent); }
+
+    .empty { color: var(--muted); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    th, td { padding: 0.4rem 0.6rem; text-align: right; white-space: nowrap; }
+    th.left, td.left { text-align: left; }
+    thead th { background: var(--card); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 0.78rem; }
+    tbody tr:nth-child(even) { background: var(--card); }
+  </style>
+</Base>

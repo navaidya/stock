@@ -1,0 +1,49 @@
+name: Refresh macro data
+
+on:
+  schedule:
+    # Once a day. Every tracked series is monthly or slower except the fed
+    # funds rate and Treasury yields, so there is nothing to gain from a
+    # faster cadence (MAC-3).
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-macro
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run collect:macro
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          ./scripts/commit-data.sh data/macro.json 'chore: refresh macro data'
+      # See scripts/push-with-rebase.sh (COL-24): this can race with the other
+      # two refresh workflows the same way they can race each other.
+      - run: ./scripts/push-with-rebase.sh
+
+  # Same reasoning as the other refresh workflows' deploy job (COL-17): a push
+  # made with GITHUB_TOKEN does not trigger deploy.yml's own push trigger.
+  deploy:
+    needs: refresh
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      ref: main

@@ -111,3 +111,49 @@ export interface UniverseEntry {
   segment: string;
   why?: string;
 }
+
+/** One tracked macro event, as hand-curated in data/macro-events.yaml
+ *  (`MAC-1`, `MAC-2`). `fredSeries` is `null` for the one event with no FRED
+ *  series — FOMC, which carries its own hand-curated `meetingCalendar`
+ *  instead. */
+export interface MacroEvent {
+  id: string;
+  label: string;
+  agency: string;
+  category: string;
+  frequency: string;
+  fredSeries: string | null;
+  derive?: 'yoy' | 'mom_change' | 'level';
+  unit?: string;
+  sourceUrl: string;
+  note?: string;
+  meetingCalendar?: { asOf: string; dates: string[] };
+}
+
+/** One point in a mirrored macro or Treasury-yield series — see
+ *  `src/lib/macro.ts`. */
+export interface MacroSeriesPoint {
+  date: string;
+  value: number;
+}
+
+export interface MacroYieldPoint {
+  date: string;
+  y1mo?: number;
+  y3mo?: number;
+  y6mo?: number;
+  y1yr?: number;
+  y2yr?: number;
+  y5yr?: number;
+  y10yr?: number;
+  y30yr?: number;
+}
+
+/** `data/macro.json` — mirrored history from FRED and Treasury.gov, the one
+ *  deliberate exception to "one snapshot, not a history" (`070-macro-events.md`). */
+export interface MacroData {
+  generatedAt: string;
+  failed: string[];
+  series: Record<string, MacroSeriesPoint[]>;
+  yields: MacroYieldPoint[];
+}

@@ -1,0 +1,131 @@
+# Macro event calendar for the /macro page (MAC-1, MAC-2).
+#
+# Two kinds of entry:
+#
+#  - A FRED-backed event (everything except fomc): "last reported" comes from
+#    data/macro.json, collected fresh from FRED every run by
+#    `node scripts/collect.mjs macro`. This file only carries the fixed
+#    description of the series and how to derive its displayed value
+#    (`derive: yoy` | `mom_change` | `level` — see src/lib/macro.ts).
+#
+#  - fomc: FRED has no series for "the next scheduled meeting date," so the
+#    meeting calendar below is hand-curated from the Federal Reserve's own
+#    published schedule (https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm).
+#    `asOf` is when this list was last checked against that source — refresh
+#    it by hand once the Fed publishes next year's dates (usually mid-year;
+#    see MOD-24 for the same discipline applied to reference.yaml).
+#
+# PUBLIC REPO, PUBLIC DATA: none of this is personal — see CLAUDE.md.
+
+events:
+  - id: cpi
+    label: Consumer Price Index (CPI)
+    agency: Bureau of Labor Statistics
+    category: inflation
+    frequency: Monthly, released ~10th-15th, one month lagged
+    fredSeries: CPIAUCSL
+    derive: yoy
+    unit: "% YoY"
+    sourceUrl: https://www.bls.gov/cpi/
+
+  - id: corePce
+    label: Core PCE Price Index
+    agency: Bureau of Economic Analysis
+    category: inflation
+    frequency: Monthly, released ~last Friday of the month, one month lagged
+    fredSeries: PCEPILFE
+    derive: yoy
+    unit: "% YoY"
+    sourceUrl: https://www.bea.gov/data/personal-consumption-expenditures-price-index
+    note: The Fed's own preferred inflation gauge, distinct from CPI.
+
+  - id: ppi
+    label: Producer Price Index (Final Demand)
+    agency: Bureau of Labor Statistics
+    category: inflation
+    frequency: Monthly, released within a few days of CPI
+    fredSeries: PPIFIS
+    derive: yoy
+    unit: "% YoY"
+    sourceUrl: https://www.bls.gov/ppi/
+
+  - id: unemploymentRate
+    label: Unemployment Rate
+    agency: Bureau of Labor Statistics
+    category: labor
+    frequency: Monthly, first Friday of the month (with nonfarm payrolls)
+    fredSeries: UNRATE
+    derive: level
+    unit: "%"
+    sourceUrl: https://www.bls.gov/ces/
+
+  - id: nonfarmPayrolls
+    label: Nonfarm Payrolls (change)
+    agency: Bureau of Labor Statistics
+    category: labor
+    frequency: Monthly, first Friday of the month
+    fredSeries: PAYEMS
+    derive: mom_change
+    unit: "thousands, MoM"
+    sourceUrl: https://www.bls.gov/ces/
+
+  - id: fedFundsRate
+    label: Federal Funds Effective Rate
+    agency: Federal Reserve
+    category: policy
+    frequency: Daily reading; the target range moves on FOMC decisions, 8x/year
+    fredSeries: FEDFUNDS
+    derive: level
+    unit: "%"
+    sourceUrl: https://www.federalreserve.gov/monetarypolicy.htm
+
+  - id: gdp
+    label: Gross Domestic Product
+    agency: Bureau of Economic Analysis
+    category: growth
+    frequency: Quarterly, three estimates per quarter (advance, second, third)
+    fredSeries: GDP
+    derive: level
+    unit: "$B, nominal, annualized"
+    sourceUrl: https://www.bea.gov/data/gdp/gross-domestic-product
+
+  - id: retailSales
+    label: Retail Sales
+    agency: Census Bureau
+    category: consumer
+    frequency: Monthly, ~mid-month
+    fredSeries: RSAFS
+    derive: level
+    unit: "$M"
+    sourceUrl: https://www.census.gov/retail/index.html
+
+  - id: consumerSentiment
+    label: Consumer Sentiment (University of Michigan)
+    agency: University of Michigan
+    category: consumer
+    frequency: Monthly, preliminary mid-month, final end-of-month
+    fredSeries: UMCSENT
+    derive: level
+    unit: index
+    sourceUrl: https://www.sca.isr.umich.edu/
+
+  - id: fomc
+    label: FOMC Meeting & Rate Decision
+    agency: Federal Reserve
+    category: policy
+    frequency: 8x/year, ~every 6-7 weeks
+    fredSeries: null
+    sourceUrl: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    meetingCalendar:
+      asOf: 2026-09-06
+      # Decision day of each 2026 meeting (the second day of each two-day
+      # meeting), from the Fed's own published 2026 schedule.
+      dates:
+        - 2026-01-28
+        - 2026-03-18
+        - 2026-04-29
+        - 2026-06-17
+        - 2026-07-29
+        - 2026-09-16
+        - 2026-10-28
+        - 2026-12-09

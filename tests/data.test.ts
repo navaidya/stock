@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { freshness, hydrate, loadSp500, loadUniverse, loadWatchlist } from '../src/lib/data.ts';
+import {
+  freshness,
+  hydrate,
+  loadMacroData,
+  loadMacroEvents,
+  loadSp500,
+  loadUniverse,
+  loadWatchlist,
+} from '../src/lib/data.ts';
 import { payingDividend } from '../src/lib/columns.ts';
 import type { MarketData } from '../src/lib/types.ts';
 
@@ -30,6 +38,54 @@ describe('watchlist and universe data files', () => {
     for (const entry of loadWatchlist() as unknown as Record<string, unknown>[]) {
       for (const key of banned) expect(entry[key]).toBeUndefined();
     }
+  });
+});
+
+describe('macro event calendar', () => {
+  it('[MAC-1] parses, is non-empty, and has no duplicate ids', () => {
+    const events = loadMacroEvents();
+    expect(events.length).toBeGreaterThan(0);
+    const ids = events.map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('[MAC-1] every event has a label, agency, category, frequency, and source', () => {
+    for (const event of loadMacroEvents()) {
+      expect(event.label, `${event.id} missing label`).toBeTruthy();
+      expect(event.agency, `${event.id} missing agency`).toBeTruthy();
+      expect(event.category, `${event.id} missing category`).toBeTruthy();
+      expect(event.frequency, `${event.id} missing frequency`).toBeTruthy();
+      expect(event.sourceUrl, `${event.id} missing sourceUrl`).toBeTruthy();
+    }
+  });
+
+  it('[MAC-2] the FOMC meeting calendar carries an asOf date and sorted-checkable dates', () => {
+    const fomc = loadMacroEvents().find((e) => e.id === 'fomc');
+    expect(fomc, 'no fomc event defined').toBeTruthy();
+    expect(fomc!.fredSeries).toBeNull();
+    expect(fomc!.meetingCalendar?.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(fomc!.meetingCalendar?.dates.length).toBeGreaterThan(0);
+    for (const date of fomc!.meetingCalendar?.dates ?? []) {
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it('every non-fomc event declares a FRED series and a derivation', () => {
+    for (const event of loadMacroEvents().filter((e) => e.id !== 'fomc')) {
+      expect(event.fredSeries, `${event.id} missing fredSeries`).toBeTruthy();
+      expect(['yoy', 'mom_change', 'level']).toContain(event.derive);
+    }
+  });
+});
+
+describe('loadMacroData [MAC-15]', () => {
+  it('tolerates data/macro.json being absent, the same way loadMarketData does', () => {
+    // This only proves the fallback shape is correct in isolation; it does not
+    // assert the file is actually absent in this checkout.
+    const macro = loadMacroData();
+    expect(macro.series).toBeTypeOf('object');
+    expect(Array.isArray(macro.yields)).toBe(true);
+    expect(Array.isArray(macro.failed)).toBe(true);
   });
 });
 

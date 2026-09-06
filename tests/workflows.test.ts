@@ -14,6 +14,7 @@ const workflow = (name: string) =>
 
 const refresh = workflow('refresh-data.yml');
 const refreshSp500 = workflow('refresh-sp500.yml');
+const refreshMacro = workflow('refresh-macro.yml');
 const deploy = workflow('deploy.yml');
 
 describe('refresh-data workflow', () => {
@@ -84,6 +85,49 @@ describe('refresh-sp500 workflow', () => {
 
   it('[COL-24] pushes through the rebase-and-retry script, not a bare git push', () => {
     const steps = refreshSp500.jobs.refresh.steps.map((s: { run?: string }) => s.run?.trim() ?? '');
+    expect(steps).toContain('./scripts/push-with-rebase.sh');
+    expect(steps).not.toContain('git push');
+  });
+});
+
+describe('refresh-macro workflow', () => {
+  it('[MAC-3] runs on its own schedule, separate from the other two refreshes', () => {
+    const crons = (spec: any) =>
+      (Array.isArray(spec.on.schedule) ? spec.on.schedule : []).map((s: { cron: string }) => s.cron);
+    const macroCrons = crons(refreshMacro);
+    expect(macroCrons.length).toBeGreaterThan(0);
+    for (const c of macroCrons) {
+      expect(crons(refresh)).not.toContain(c);
+      expect(crons(refreshSp500)).not.toContain(c);
+    }
+  });
+
+  it('[MAC-3] collects the macro target with FRED_API_KEY, not FINNHUB_API_KEY', () => {
+    const collectStep = refreshMacro.jobs.refresh.steps.find((s: { run?: string }) =>
+      s.run?.includes('npm run collect:macro'),
+    );
+    expect(collectStep).toBeDefined();
+    expect(collectStep.env?.FRED_API_KEY).toBeDefined();
+    expect(collectStep.env?.FINNHUB_API_KEY).toBeUndefined();
+  });
+
+  it('[COL-6, COL-15] commits only data/macro.json, through the tested script', () => {
+    const steps = refreshMacro.jobs.refresh.steps.map((s: { run?: string }) => s.run ?? '');
+    expect(steps.some((run: string) => run.includes('scripts/commit-data.sh data/macro.json'))).toBe(
+      true,
+    );
+  });
+
+  it('[COL-17] calls the deploy workflow rather than relying on the push trigger', () => {
+    const deployJob = refreshMacro.jobs.deploy;
+    expect(deployJob).toBeDefined();
+    expect(deployJob.uses).toBe('./.github/workflows/deploy.yml');
+    expect(deployJob.needs).toBe('refresh');
+    expect(deployJob.with.ref).toBe('main');
+  });
+
+  it('[COL-24] pushes through the rebase-and-retry script, not a bare git push', () => {
+    const steps = refreshMacro.jobs.refresh.steps.map((s: { run?: string }) => s.run?.trim() ?? '');
     expect(steps).toContain('./scripts/push-with-rebase.sh');
     expect(steps).not.toContain('git push');
   });

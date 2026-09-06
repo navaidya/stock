@@ -30,7 +30,9 @@ not answer "what should I buy."
 - Hand-curated public reference data the API does not carry — issuer credit
   ratings, remaining performance obligation — each value dated at its source.
 - Four static views over that data: watchlist, AI-exposure, dividends, and an
-  S&P 500 screen, plus a glossary page explaining every column.
+  S&P 500 screen, plus a glossary page explaining every column, plus a macro
+  events page tracking the recurring reports and Fed decisions that move the
+  whole market.
 - Client-side sorting and filtering of any column on any view.
 - A short machine-written brief over each collection, generated outside the
   browser — in CI, or locally by the owner.
@@ -59,7 +61,14 @@ one of them is a change to this spec, not a feature.
   rank. See `030-presentation.md` `UI-45`..`UI-48` for the constraints that
   keep it on the data side of this line rather than the advice side.
 - **Backtesting, charting, or historical time-series storage.** The system
-  stores one current snapshot, not a history.
+  stores one current snapshot, not a history. One narrow, deliberate
+  exception: `data/macro.json` mirrors the complete published history of a
+  small set of official macroeconomic and Treasury-yield series, fetched
+  fresh from FRED and Treasury.gov on every collection rather than
+  accumulated sample by sample — the same trust relationship a reference
+  value already has with its source, just fetched instead of hand-typed. See
+  [070-macro-events.md](070-macro-events.md) for the reasoning and the
+  constraints that keep it from becoming a general-purpose history feature.
 
 ## 3. Architecture
 
@@ -90,11 +99,19 @@ data/sp500.yaml ──(1) separate daily GitHub Action──> scripts/collect.mj
                                                               │
                                                               v
                                                        data/sp500.json ──> (as above)
+
+data/macro-events.yaml ─(1) separate daily GitHub Action─> scripts/collect.mjs macro ──> FRED API, Treasury.gov
+  (hand-curated: FOMC dates,                                      │
+   which FRED series to fetch)                                    v
+                                                             data/macro.json ──> (as above)
 ```
 
 The S&P 500 target shares the collector script and every pure module above; it
 differs only in its ticker set, its output file, and its slower schedule
-(`COL-21`, `COL-22`) — see `010-data-collection.md`.
+(`COL-21`, `COL-22`) — see `010-data-collection.md`. The macro target differs
+more: it calls FRED and Treasury.gov instead of Finnhub, and it is the one
+place `data/` holds a real history rather than a snapshot — see
+`070-macro-events.md`.
 
 Three boundaries matter:
 
@@ -138,6 +155,7 @@ These hold everywhere. Each child spec inherits them.
 | [040-privacy-and-secrets.md](040-privacy-and-secrets.md) | Privacy | `SEC` | Public-repo constraints, secret handling |
 | [050-delivery.md](050-delivery.md) | Delivery | `DEL` | Build, test gate, deploy, dependency policy |
 | [060-daily-brief.md](060-daily-brief.md) | Daily brief | `BRF` | Model-written summary: generation, prohibitions, failure semantics |
+| [070-macro-events.md](070-macro-events.md) | Macro events | `MAC` | Macro release calendar, Treasury yield history, bond-market reaction |
 
 Process and conventions live in [README.md](README.md).
 
@@ -152,6 +170,8 @@ empty list is the goal, not the assumption.
 | `COL-4`, `COL-5`, `COL-11` | The collector's failure-retention logic is not covered by any test, because the run loop does its own I/O at module scope. | The graceful-degradation behaviour that `SYS-4` depends on is asserted only by reading the code. | **Open** — verification gap, not a known defect. `COL-3` left this list when the pacing arithmetic moved into a tested pure function |
 | `BRF-2` | No `ANTHROPIC_API_KEY` secret is configured, so no brief is generated. | The home page renders without a brief, which is the specified degraded state rather than a defect. | **Open by choice** — closes when the secret is added; costs nothing until then |
 | `MOD-24` | The seed values in `data/reference.yaml` were written from an agent's recall of public filings and rating actions, not read off a primary source. Each carries an `asOf` date and a source note, but none has been checked against it. | The credit rating column shows these as facts on the dashboard; RPO is no longer a column but is still shown, per-ticker, in the FAQ's curated-values table. A wrong rating is precisely the substituted value `SYS-7` exists to prevent. | **Open** — every seeded value needs verification against the issuer's rating page or filing; the mechanism is correct, the data is provisional |
+| `MAC-2` | The FOMC meeting calendar in `data/macro-events.yaml` was entered from a web search against the Fed's published schedule, not fetched live. | The next-meeting date on `/macro` could be wrong if the Fed rescheduled a meeting after this was written. | **Open** — check the `asOf` date against `federalreserve.gov/monetarypolicy/fomccalendars.htm` periodically; low risk, the Fed rarely moves a published date |
+| — | `/macro`'s bond-reaction table has no equity-side counterpart — see `070-macro-events.md` "Known gaps." | A reader cannot see "what stocks did" around a macro event on this page, only what Treasury yields did. | **Open by choice** — no free data source for historical daily equity benchmark prices is wired up; not a defect in what is built |
 
 ## 7. Glossary
 
@@ -169,3 +189,5 @@ empty list is the goal, not the assumption.
 | **Financial Health score** | A 0–100 composite of profitability and balance-sheet stability only — see `src/lib/health.ts` and `020-data-model.md` `MOD-31`..`MOD-33`. The one exception to the no-composite-scores rule; never a ranking, never advice. |
 | **Stale** | Data older than 24 hours, or never collected. Surfaced in the UI, never hidden. |
 | **Free tier** | Finnhub's no-cost plan: 60 calls/minute, and an unpredictable subset of metrics per symbol. |
+| **Macro event** | A recurring scheduled economic release or Fed decision tracked on `/macro` — see `070-macro-events.md` `MAC-1`, `MAC-2`. |
+| **Bond reaction** | The change in the 2-year and 10-year Treasury yield around a past macro event's date, computed from mirrored Treasury history. A historical fact, not a prediction (`MAC-14`). |

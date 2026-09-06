@@ -13,20 +13,23 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 import { mapToSnapshot, symbolDelayMs } from '../src/lib/finnhub.ts';
 import { todayISO } from '../src/lib/dates.ts';
+import { deriveSeries, mapFredObservations, parseTreasuryYieldCsv } from '../src/lib/macro.ts';
 
 const ROOT = process.cwd();
 const DATA = join(ROOT, 'data');
 const API = 'https://finnhub.io/api/v1';
 
-// A second collection target reusing the same fetch/pace/coerce pipeline
-// (COL-21): `npm run collect:sp500` passes `sp500` here. Kept as one script
-// rather than two so there is still exactly one file that touches the
-// network (SYS-1 architecture boundary).
-const TARGET = process.argv[2] === 'sp500' ? 'sp500' : 'default';
-const OUT = join(DATA, TARGET === 'sp500' ? 'sp500.json' : 'market.json');
+// A third collection target reusing the same script and network boundary
+// (COL-21, MAC-3): `npm run collect:sp500` / `collect:macro` pass the target
+// name here. One file, not three, so there is still exactly one place that
+// touches the network (SYS-1 architecture boundary).
+const TARGET = ['sp500', 'macro'].includes(process.argv[2]) ? process.argv[2] : 'default';
+const OUT = join(DATA, TARGET === 'sp500' ? 'sp500.json' : TARGET === 'macro' ? 'macro.json' : 'market.json');
 
+// The macro target calls FRED and Treasury.gov, not Finnhub, and needs
+// FRED_API_KEY instead of FINNHUB_API_KEY.
 const KEY = process.env.FINNHUB_API_KEY;
-if (!KEY) {
+if (TARGET !== 'macro' && !KEY) {
   console.error('FINNHUB_API_KEY is not set. Copy .env.example to .env for local runs,');
   console.error('or add the secret to the repository for CI.');
   process.exit(1);
@@ -115,7 +118,94 @@ async function collectOne(entry, today) {
   return mapToSnapshot({ ...entry, quote, profile, metrics, earnings, today });
 }
 
+const FRED_KEY = process.env.FRED_API_KEY;
+const FRED_API = 'https://api.stlouisfed.org/fred';
+
+async function getFredObservations(seriesId) {
+  const url = new URL(`${FRED_API}/series/observations`);
+  url.searchParams.set('series_id', seriesId);
+  url.searchParams.set('api_key', FRED_KEY);
+  url.searchParams.set('file_type', 'json');
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body = await res.json();
+  return body.observations;
+}
+
+// Treasury's yield-curve export is one file per calendar year. Two years
+// covers a full 12 months of history even collected on January 1st.
+async function getTreasuryYieldCsv(year) {
+  const url =
+    `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/` +
+    `daily-treasury-rates.csv/${year}/all?type=daily_treasury_yield_curve` +
+    `&field_tdr_date_value=${year}&page&_format=csv`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.text();
+}
+
+/** Collects the macro event series (MAC-3). Every FRED series and the
+ *  Treasury yield fetch are isolated from each other (MAC-4, SYS-4): one
+ *  failing leaves that series/the yields absent from the output rather than
+ *  aborting the run or blocking anything else. */
+async function mainMacro() {
+  if (!FRED_KEY) {
+    console.error('FRED_API_KEY is not set. Copy .env.example to .env for local runs,');
+    console.error('or add the secret to the repository for CI.');
+    process.exit(1);
+  }
+
+  const events = parse(readFileSync(join(DATA, 'macro-events.yaml'), 'utf8'))?.events ?? [];
+  const series = {};
+  const failed = [];
+
+  for (const event of events) {
+    if (!event.fredSeries) continue; // fomc has a hand-curated calendar, no FRED series
+    try {
+      const observations = mapFredObservations(await getFredObservations(event.fredSeries));
+      series[event.id] = deriveSeries(observations, event.derive ?? 'level');
+      process.stdout.write('.');
+    } catch (err) {
+      failed.push(event.id);
+      console.warn(`\n  ${event.id} (${event.fredSeries}): ${err.message}`);
+      process.stdout.write('x');
+    }
+  }
+  console.log('');
+
+  const thisYear = new Date().getFullYear();
+  let yields = [];
+  try {
+    // Parsed and concatenated as points, not as raw CSV text: Treasury has
+    // changed the column set before (the 1.5-month bill, added 2025), so two
+    // years' files are not guaranteed to share one header.
+    const [prior, current] = await Promise.all([
+      getTreasuryYieldCsv(thisYear - 1),
+      getTreasuryYieldCsv(thisYear),
+    ]);
+    yields = [...parseTreasuryYieldCsv(prior), ...parseTreasuryYieldCsv(current)];
+  } catch (err) {
+    failed.push('treasuryYields');
+    console.warn(`Treasury yields: ${err.message}`);
+  }
+
+  if (Object.keys(series).length === 0 && yields.length === 0) {
+    console.error('Every macro source failed. Not overwriting data/macro.json.');
+    process.exit(existsSync(OUT) ? 0 : 1);
+  }
+
+  if (!existsSync(DATA)) mkdirSync(DATA, { recursive: true });
+  writeFileSync(
+    OUT,
+    JSON.stringify({ generatedAt: new Date().toISOString(), failed, series, yields }, null, 2) + '\n',
+  );
+  console.log(`Wrote ${Object.keys(series).length} series and ${yields.length} yield points to data/macro.json`);
+  if (failed.length) console.log(`Failed: ${failed.join(', ')}`);
+}
+
 async function main() {
+  if (TARGET === 'macro') return mainMacro();
+
   const entries = readTickers();
   const previous = loadPrevious();
   const stocks = {};

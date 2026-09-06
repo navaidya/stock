@@ -5,6 +5,8 @@ import { normalizeStoredBrief, type StoredBrief } from './brief.ts';
 import { daysUntil } from './dates.ts';
 import { normalizeReference } from './reference.ts';
 import type {
+  MacroData,
+  MacroEvent,
   MarketData,
   ReferenceEntry,
   StockSnapshot,
@@ -30,6 +32,33 @@ export function loadUniverse(): { segments: Record<string, string>; universe: Un
 export function loadSp500(): WatchlistEntry[] {
   const raw = parse(readFileSync(join(DATA, 'sp500.yaml'), 'utf8'));
   return raw?.sp500 ?? [];
+}
+
+/** The hand-curated macro event calendar for /macro (MAC-1, MAC-2). */
+export function loadMacroEvents(): MacroEvent[] {
+  const raw = parse(readFileSync(join(DATA, 'macro-events.yaml'), 'utf8'));
+  return raw?.events ?? [];
+}
+
+/** Mirrored FRED/Treasury history for /macro. Missing entirely before the
+ *  macro collector has ever run, the same tolerance every other data file
+ *  gets (MAC-15, mirrors MOD-15). */
+export function loadMacroData(): MacroData {
+  const path = join(DATA, 'macro.json');
+  if (!existsSync(path)) {
+    return { generatedAt: '', failed: [], series: {}, yields: [] };
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8'));
+    return {
+      generatedAt: parsed.generatedAt ?? '',
+      failed: parsed.failed ?? [],
+      series: parsed.series ?? {},
+      yields: parsed.yields ?? [],
+    };
+  } catch {
+    return { generatedAt: '', failed: [], series: {}, yields: [] };
+  }
 }
 
 /** Hand-curated values the API does not carry — credit ratings, RPO. Optional
