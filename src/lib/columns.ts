@@ -329,6 +329,7 @@ export const aiColumns: Column[] = [
   // who is investment grade and who is not is part of reading this page.
   creditRatingColumn,
   volumeColumn,
+  analystRatingColumn,
 ];
 
 /** Dividends: yield alone is a trap — a high yield usually means the price
@@ -371,6 +372,7 @@ export const dividendColumns: Column[] = [
   },
   creditRatingColumn,
   healthColumn,
+  analystRatingColumn,
   {
     key: 'peTTM',
     label: 'P/E',
