@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T20:10:09.685Z",
+  "generatedAt": "2026-10-07T23:20:20.587Z",
   "failed": [],
   "stocks": {
     "ORCL": {
@@ -51,11 +51,11 @@
       "name": "NVIDIA",
       "sector": "semiconductors",
       "isEtf": false,
-      "price": 237.36,
-      "changePct1D": -0.7858,
+      "price": 237.47,
+      "changePct1D": -0.7398,
       "weekHigh52": 240.0983,
       "weekLow52": 164.27,
-      "pctOff52WeekHigh": -1.1404912071430664,
+      "pctOff52WeekHigh": -1.0946766386934002,
       "priceReturn52W": 27.3318,
       "marketCap": 5765683.852695655,
       "beta": 2.2586465,
