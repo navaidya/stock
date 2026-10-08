@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T20:07:28.258Z",
+  "generatedAt": "2026-10-08T23:35:15.174Z",
   "failed": [],
   "stocks": {
     "ORCL": {
@@ -7,11 +7,11 @@
       "name": "Oracle",
       "sector": "technology",
       "isEtf": false,
-      "price": 135.55,
-      "changePct1D": -5.5795,
+      "price": 135.69,
+      "changePct1D": -5.482,
       "weekHigh52": 322.54,
       "weekLow52": 114.5,
-      "pctOff52WeekHigh": -57.974204749798474,
+      "pctOff52WeekHigh": -57.93079928070938,
       "priceReturn52W": -50.3515,
       "marketCap": 434087.5650274043,
       "beta": 1.779303,
