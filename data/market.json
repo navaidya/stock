@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T21:52:54.814Z",
+  "generatedAt": "2026-10-20T23:53:19.527Z",
   "failed": [],
   "stocks": {
     "ORCL": {
@@ -998,6 +998,7 @@
       "avgVolume3M": 4.77263,
       "volumeRatio10D3M": 1.1192508113974895,
       "earningsDate": "2026-10-27",
+      "earningsHour": "after close",
       "peTTM": 47.1933,
       "forwardPE": 22.4542,
       "pegTTM": 0.97739,
